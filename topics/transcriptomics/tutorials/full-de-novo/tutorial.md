@@ -129,19 +129,74 @@ Why do we need to correct those?
 >
 {: .hands_on} -->
 
-## Read cleaning with **Trimmomatic**
+## Sequencing error correction with **Rcorrector**  
+
+To do so, we can use [Rcorrector (Song et al., 2015)](https://github.com/mourisl/Rcorrector), which is a kmer-based error correction method for RNA-seq data, based on the path search algorithm. 
+
+Rcorrector distinguishes among solid and non-solid k-mers as the basis for its correction algorithm. A solid k-mer is one that passes a given count threshold and therefore can be trusted to be correct. Rcorrector uses a flexible threshold for solid k-mers, which is calculated for each k-mer within each read sequence. At run time, Rcorrector scans the read sequence and, at each position, decides whether the next k-mer and each of its alternatives are solid and therefore represent valid continuations of the path. The path with the smallest number of differences from the read sequence, representing the likely transcript of origin, is then used to correct k-mers in the original read.
+
+![Rcorrector_algo](../../images/full-de-novo/Rcorrector_path-search-algo.png)   
+
+Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer (k=4) in the De Bruijn graph for the r= AAGTCATAA read sequence. Numbers in the vertices represent k-mer counts. The first (top) path corresponds to the original read’s representation in the De Bruijn graph. The extension is pruned after the first step, AGTC →GTCA, as the count M(GTCA)=4 falls below the local cutoff (determined based on the maximum k-mer count (494) of the four possible successors of AGTC). The second path (yellow) has higher k-mer counts but it introduces four corrections, changing the read into AAGTCCGTC. The third path (blue) introduces only two corrections, to change the sequence into AAGTCGTTA, and is therefore chosen to correct the read. The fourth (bottom) path is pruned as the k-mer count for GTCT does not pass the threshold. Paths 2 and 3 are likely to indicate paralogs and/or splice variants of this gene.   
+   
+
+> ### {% icon hands_on %} Hands-on: Task description
+>
+> 1. **Rcorrector** {% icon tool %} with the following parameters: 
+>    - *"Is this library paired- or single-end?"*: `Paired-end (as collection)`
+>        - *"FastQ file R1 (left)"*: `R1`
+>        - *"FastQ file R2 (right)"*: `R2`
+>        - *"Filter uncorrectable reads"*: `Yes`
+>    - *"Additional options"*: `No`   
+> 2. **Rename the resulting datasets**
+>    - `RNA-seq Rcorrector on XX ->  XX_corrected`  
+> 
+{: .hands_on}
+
+## rRNA removal with **Bowtie2**  
+
+One of the main source of contamination of RNA-seq samples is **ribosomal RNA**. Indeed, ~90% of total RNA correspond to rRNA. Before sequencing, ribodepletion and polyA selection are common mmethods  to clean the samples, but it does not filter out all rRNA. After sequencing, removal rRNA reads from raw reads and detect rRNA transcripts are usefull processes.
+
+To do so, we use [Bowtie 2](https://github.com/BenLangmead/bowtie2) whiwh is an ultrafast and memory-efficient tool for aligning sequencing reads to reference sequences. 
+Here, the reference will be Silva database.
+
+> ### {% icon hands_on %} Hands-on: Task description
+> 1. **Bowtie2** {% icon tool %} with the following parameters:
+>    - *"Is this single or paired library"*: `Paired-end`
+>        - *"FASTA/Q file #1"*: `R1_corrected`
+>        - *"FASTA/Q file #2"*: `R2_corrected`
+>        - *"Write unaligned reads (in fastq format) to separate file(s)"*: `Yes`
+>        - *"Write aligned reads (in fastq format) to separate file(s)"*: `No`
+>        - *"Do you want to set paired-end options?"*: `No`
+>    - *"Will you select a reference genome from your history or use a built-in index?"*: `Use a built-in genome index`
+>        - *"Select reference genome"*: `Silva Ribosomal Database`
+>    - *"Set read groups information?"*: `Do not set`
+>    - *"Select analysis mode"*: `1:Default setting only`
+>        - *"Do you want to use presets?"*: `Very sensitive end-to-end (--very-sensitive)`
+>    - *"Do you want to tweak SAM/BAM Options?"*: `No`
+>    - *"Save the bowtie2 mapping statistics to the history"*: `Yes`
+> 2. **Rename the resulting datasets**
+>    - `Bowtie2 on XX: alignments -> `     
+>
+{: .hands_on}
+
+## Read cleaning with **Trimmomatic** 
+
+
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Trimmomatic** {% icon tool %} with the following parameters:
 >    - *"Single-end or paired-end reads?"*: `Paired-end (as collection)`
->    - *"Select FASTQ dataset collection with R1/R2 pair"*: `fastq_raw`
+>    - *"Select FASTQ dataset collection with R1/R2 pair"*: `Raw Data`
 >    - *"Perform initial ILLUMINACLIP step?"*: `Yes`
 >    - *"Adapter sequences to use"*: `TruSeq3 (additional seqs) (paired-ended, for MiSeq and HiSeq)`
 >    - In *"Trimmomatic Operation"*:
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Cut bases off end of a read, if below a threshold quality (TRAILING)`
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
+t_toy_dataset](../../images/full-de-novo/ExN50_plot_toy_dataset.png)
+t](../../images/full-de-novo/ExN50_plot.png)
 >            - *"Select Trimmomatic operation to perform"*: `Cut bases off start of a read, if below a threshold quality (LEADING)`
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Sliding window trimming (SLIDINGWINDOW)`
