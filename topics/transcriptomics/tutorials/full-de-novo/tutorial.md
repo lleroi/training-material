@@ -23,6 +23,9 @@ contributors:
 - lecorguille
 - r1corre
 - xiliu
+- lleroi
+- alexcorm
+- paulineauffret
 
 ---
 
@@ -233,6 +236,10 @@ t](../../images/full-de-novo/ExN50_plot.png)
 
 # Assembly (120 minutes - computing)
 
+We will use *Trinity*, a de novo transcriptome assembler for short sequencing reads. 
+*Trinity* is the most widely used de novo transcriptome assembler and in continuous development since several years.
+All information about Trinity assembler are here [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
+
 ## Assembly with **Trinity**
 
 > <hands-on-title>Task description</hands-on-title>
@@ -251,9 +258,45 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >
 {: .hands_on}
 
+> ### {% icon question %} Questions
+>
+> 1. TODO
+> 2. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> > 2. TODO
+> >
+> {: .solution}
+>
+{: .question}
+
+
+> ### {% icon comment %} Try it on!
+> *rnaSPAdes* is a most recent assembler and can outperform *Trinity* results most of the time but not always. You can do
+> the de novo assembly with **rnaSPAdes** {% icon tool %} and compare the results!
+> 
+> 
+> > ### {% icon hands_on %} Hands-on: Task description
+> >
+> > 1. **rnaSPAdes** {% icon tool %} with the following parameters:
+> >   - *"Single-end or paired-end short-reads"*: `Paired-end: individual datasets`
+> >   - *"Select optional output file(s)"*: `Transcripts`
+> >
+> {: .hands_on}
+{: .comment}
+
+> ### {% icon tip %} Benchmarking
+> [De novo transcriptome assembly: A comprehensive cross-species comparison of short-read RNA-Seq assemblers](https://academic.oup.com/gigascience/article/8/5/giz039/5488105)
+> 
+{: .comment}
+
 # Assembly assessment / cleaning
 
 ## Checking of the assembly statistics
+
+TODO: ***Trinity Statistics*** displays the summary statistics for a fasta file.
 
 > <hands-on-title>Task description</hands-on-title>
 >
@@ -266,7 +309,22 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >
 {: .hands_on}
 
+> ### {% icon question %} Questions
+>
+> 1. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> >
+> {: .solution}
+>
+{: .question}
+
+
 ## Remapping on the raw transcriptome
+
+TODO: presentation and aim of this part
 
 > <hands-on-title>Task description</hands-on-title>
 >
@@ -313,6 +371,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 
 ## Merge the mapping tables and compute normalizations
 
+TODO: presentation and aim of this part
+
 > <hands-on-title>Task description</hands-on-title>
 >
 > 1. **Build expression matrix** {% icon tool %} with the following parameters:
@@ -337,6 +397,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 
 ## Compute contig Ex90N50 statistic and Ex90 transcript count
 
+TODO: presentation and aim of this part
+
 > <hands-on-title>Task description</hands-on-title>
 >
 > 1. **Compute contig Ex90N50 statistic and Ex90 transcript count** {% icon tool %} with the following parameters:
@@ -348,6 +410,10 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >    3. *"Y Column"*: select the Columns `2`
 >
 {: .hands_on}
+
+### Definition
+
+Ex90N50 values are computed as usual N50 but limited to the top most highly expressed transcripts that represent 90% of the total normalized expression data. 
 
 ### What we get
 ![ExN50_plot_toy_dataset](../../images/full-de-novo/ExN50_plot_toy_dataset.png)
@@ -370,6 +436,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 ![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
 
 ## Filter low expression transcripts
+
+TODO: presentation and aim of this part
 
 > <hands-on-title>Task description</hands-on-title>
 >
@@ -398,6 +466,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 
 ## Checking of the assembly statistics after cleaning
 
+TODO: presentation and aim of this part
+
 > <hands-on-title>Task description</hands-on-title>
 >
 > 1. **Trinity Statistics** {% icon tool %} with the following parameters:
@@ -408,6 +478,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 
 # Annotation
 ## Generate gene to transcript map
+
+TODO: presentation and aim of this part
 
 > <hands-on-title>Task description</hands-on-title>
 >
@@ -502,6 +574,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 {: .hands_on}
 
 # Differential Expression (DE) Analysis
+
+TODO: presentation and aim of this part
 
 ## Remapping on the filtered transcriptome using
 
