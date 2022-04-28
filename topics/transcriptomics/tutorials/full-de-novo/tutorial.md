@@ -104,7 +104,16 @@ Why do we need to correct those?
 >
 {: .hands_on}
 
-## Quality control
+## Quality control  
+   
+The first step of every sequencing data analysis must be **quality control**.   
+  
+Indeed, there are many possible sources of bias arising from :
+- **biological sampling** (contamination, low complexity...)
+- **library preparation** (adapters and primers sequences, polyA/T tails...)
+- **sequencing** (sequencing errors, optical duplicates, bad coverage...)   
+    
+To get an overview of the sequencing data quality, we will use [**fastqc** (Simon Andrews, 2010) ](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) : *"fastqc provides a modular set of analyses which you can use to give a quick impression of whether your data has any problems of which you should be aware before doing any further analysis."* 
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -112,6 +121,18 @@ Why do we need to correct those?
 >   - *"Short read data from your current history"*: `fastq_raw` (collection)
 >
 {: .hands_on}
+
+### {% icon question %} Questions
+>
+> 1. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> >
+> {: .solution}
+>
+{: .question}
 
 <!-- ## Quality control with **MultiQC** - step 2/2
 
@@ -132,15 +153,17 @@ Why do we need to correct those?
 >
 {: .hands_on} -->
 
+
+
 ## Sequencing error correction with **Rcorrector**  
+  
+To address the sequencing errors in the raw sequencing reads, we can use [**Rcorrector** (Song et al., 2015)](https://github.com/mourisl/Rcorrector) : *a kmer-based error correction method for RNA-seq data, based on the path search algorithm.*  
 
-To do so, we can use [Rcorrector (Song et al., 2015)](https://github.com/mourisl/Rcorrector), which is a kmer-based error correction method for RNA-seq data, based on the path search algorithm. 
-
-Rcorrector distinguishes among solid and non-solid k-mers as the basis for its correction algorithm. A solid k-mer is one that passes a given count threshold and therefore can be trusted to be correct. Rcorrector uses a flexible threshold for solid k-mers, which is calculated for each k-mer within each read sequence. At run time, Rcorrector scans the read sequence and, at each position, decides whether the next k-mer and each of its alternatives are solid and therefore represent valid continuations of the path. The path with the smallest number of differences from the read sequence, representing the likely transcript of origin, is then used to correct k-mers in the original read.
+"Rcorrector scans the read sequence and, at each position, decides whether the next k-mer and each of its alternatives are solid and represent valid continuations of the path. The path with the smallest number of differences from the read sequence, representing the likely transcript of origin, is then used to correct k-mers in the original read."
 
 ![Rcorrector_algo](../../images/full-de-novo/Rcorrector_path-search-algo.png)   
 
-Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer (k=4) in the De Bruijn graph for the r= AAGTCATAA read sequence. Numbers in the vertices represent k-mer counts. The first (top) path corresponds to the original read’s representation in the De Bruijn graph. The extension is pruned after the first step, AGTC →GTCA, as the count M(GTCA)=4 falls below the local cutoff (determined based on the maximum k-mer count (494) of the four possible successors of AGTC). The second path (yellow) has higher k-mer counts but it introduces four corrections, changing the read into AAGTCCGTC. The third path (blue) introduces only two corrections, to change the sequence into AAGTCGTTA, and is therefore chosen to correct the read. The fourth (bottom) path is pruned as the k-mer count for GTCT does not pass the threshold. Paths 2 and 3 are likely to indicate paralogs and/or splice variants of this gene.   
+Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer (k=4) in the De Bruijn graph for the r=AAGTCATAA read sequence. Numbers in the vertices represent k-mer counts. The first (top) path corresponds to the original read’s representation in the De Bruijn graph. The extension is pruned after the first step, AGTC →GTCA, as the count M(GTCA)=4 falls below the local cutoff (determined based on the maximum k-mer count (494) of the four possible successors of AGTC). The second path (yellow) has higher k-mer counts but it introduces four corrections, changing the read into AAGTCCGTC. The third path (blue) introduces only two corrections, to change the sequence into AAGTCGTTA, and is therefore chosen to correct the read. The fourth (bottom) path is pruned as the k-mer count for GTCT does not pass the threshold. Paths 2 and 3 are likely to indicate paralogs and/or splice variants of this gene.   
    
 
 > ### {% icon hands_on %} Hands-on: Task description
@@ -156,12 +179,30 @@ Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer
 > 
 {: .hands_on}
 
+> ### {% icon question %} Questions
+>
+> For sample **A1** :
+> 1. how many reads were **corrected** ?
+> 2. how many reads were **discarded** ?
+> 3. what is the percentage of **remaining reads** ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > Click on "*RNA-seq Rcorrector on data XXX*" box in your history to get a report.
+> > 1. `R1 corrected:488` et `R2 corrected:680`  
+> > `pairs corrected:1016`
+> > 2. `removed PE reads:4649`
+> > 3. `53.51%`
+> {: .solution}
+>
+{: .question}
+
 ## rRNA removal with **Bowtie2**  
+  
+One of the main source of contamination of RNA-seq samples is **ribosomal RNA**. Indeed, ~90% of total RNA correspond to rRNA. Before sequencing, ribodepletion and polyA selection are common mmethods to clean the samples, but it does not filter out all rRNA. After sequencing, removal rRNA reads from raw reads and detect rRNA transcripts might usefull.
 
-One of the main source of contamination of RNA-seq samples is **ribosomal RNA**. Indeed, ~90% of total RNA correspond to rRNA. Before sequencing, ribodepletion and polyA selection are common mmethods  to clean the samples, but it does not filter out all rRNA. After sequencing, removal rRNA reads from raw reads and detect rRNA transcripts are usefull processes.
-
-To do so, we use [Bowtie 2](https://github.com/BenLangmead/bowtie2) whiwh is an ultrafast and memory-efficient tool for aligning sequencing reads to reference sequences. 
-Here, the reference will be Silva database.
+To do so, we use [**Bowtie 2**](https://github.com/BenLangmead/bowtie2) which is an ultrafast and memory-efficient tool for aligning sequencing reads to reference sequences. 
+Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : high quality ribosomal RNA database.
 
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **Bowtie2** {% icon tool %} with the following parameters:
@@ -182,6 +223,21 @@ Here, the reference will be Silva database.
 >    - `Bowtie2 on XX: alignments -> `     
 >
 {: .hands_on}
+
+### {% icon question %} Questions
+>
+> 1. TODO
+> 2. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> > 2. TODO
+> >
+> {: .solution}
+>
+{: .question}
+
 
 ## Read cleaning with **Trimmomatic** 
 
