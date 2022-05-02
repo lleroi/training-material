@@ -295,6 +295,14 @@ t](../../images/full-de-novo/ExN50_plot.png)
 
 # Assembly (120 minutes - computing)
 
+To acceses at the transcritps information, we need to reconstruct all full-length transcripts from short reads. Such operation require dedicated assemblers as the process of assembling a transcriptome violates many of the assumptions of genomic assemblers. For example, uniform coverage and the ‘one locus – one contig’ paradigm are not valid for RNA. An accurate transcriptome assembler will produce one contig per distinct transcript (isoform) rather than per locus, and different transcripts will have different coverage, reflecting their different expression levels.
+
+> ### {% icon comment %} Comment
+> 
+> Do you want to learn more about the principles behind assembly? Follow our [training](https://training.galaxyproject.org/training-material/topics/assembly/tutorials/debruijn-graph-assembly/slides.html).
+> 
+{: .comment}
+
 We will use *Trinity*, a de novo transcriptome assembler for short sequencing reads. 
 *Trinity* is the most widely used de novo transcriptome assembler and in continuous development since several years.
 All information about Trinity assembler are here [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
@@ -320,12 +328,10 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 > ### {% icon question %} Questions
 >
 > 1. TODO
-> 2. TODO
 >
 > > ### {% icon solution %} Solution
 > >
 > > 1. TODO
-> > 2. TODO
 > >
 > {: .solution}
 >
@@ -353,9 +359,22 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 
 # Assembly assessment / cleaning
 
+The de novo transcriptome assembly needs to be evaluated before any further downstream analyses in order to check if it reach sufficient quality criterion. We generally use 3 criterons to perform such analysis:
+- The contiguity/metrics such as the number of transcripts, isoforms, the N50, etc.
+- The completeness according to conserved ortholog content.
+- The RNA-Seq read representation of the assembly (i.e. coverage) to ensure that reads using for the assembly are mapped back to the assembled transcriptome.
+
+Other criterions/software can be used, as:
+
+- The representation of full-length reconstructed protein-coding genes, by searching the assembled transcripts against a database of known protein sequences.
+- Compute DETONATE scores. DETONATE provides a rigorous computational assessment of the quality of a transcriptome assembly, and is useful if you want to run several assemblies using different parameter settings or using altogether different tools. That assembly with the highest DETONATE score is considered the best one.
+- TransRate generates a number of useful statistics for evaluating your transcriptome assembly. Read about TransRate here: http://genome.cshlp.org/content/26/8/1134. Note that certain statistics may be biased against the large numbers of transcripts that are very lowly expressed. Consider generating TransRate statistics for your transcriptome before and after applying a minimum expression-based filter.
+- rnaQUAST a quality assessment tool for de novo transcriptome assemblies.
+
+
 ## Checking of the assembly statistics
 
-TODO: ***Trinity Statistics*** displays the summary statistics for a fasta file.
+***Trinity Statistics*** displays the summary statistics for a fasta file.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -383,7 +402,17 @@ TODO: ***Trinity Statistics*** displays the summary statistics for a fasta file.
 
 ## Remapping on the raw transcriptome
 
-TODO: presentation and aim of this part
+This step aims to Examine the RNA-Seq read representation of the assembly.
+Ideally, at least ~80% of your input RNA-Seq reads are represented by your transcriptome assembly.
+The remaining unassembled reads likely corresponds to lowly expressed transcripts with insufficient coverage to enable 
+assembly, or are low quality or aberrant reads.
+
+Several methods available for estimating transcript abundance and these include alignment-based methods 
+(aligning reads to the transcript assembly) and alignment-free methods 
+(examining k-mer abundances in the reads and in the resulting assembly).
+
+Alignment-free method such as Kallisto and Salmon are way more faster than alignment-based quantification methods.
+In return, they cannot provide alignment files (BAM), only a coverage table.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -428,9 +457,19 @@ TODO: presentation and aim of this part
 >
 {: .hands_on}
 
-## Merge the mapping tables and compute normalizations
+> ### {% icon question %} Questions
+>
+> 1. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> >
+> {: .solution}
+>
+{: .question}
 
-TODO: presentation and aim of this part
+## Merge the mapping tables and compute normalizations
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -456,7 +495,9 @@ TODO: presentation and aim of this part
 
 ## Compute contig Ex90N50 statistic and Ex90 transcript count
 
-TODO: presentation and aim of this part
+### Definition
+
+Ex90N50 values are computed as usual N50 but limited to the top most highly expressed transcripts that represent 90% of the total normalized expression data. 
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -470,10 +511,6 @@ TODO: presentation and aim of this part
 >
 {: .hands_on}
 
-### Definition
-
-Ex90N50 values are computed as usual N50 but limited to the top most highly expressed transcripts that represent 90% of the total normalized expression data. 
-
 ### What we get
 ![ExN50_plot_toy_dataset](../../images/full-de-novo/ExN50_plot_toy_dataset.png)
 
@@ -482,6 +519,8 @@ Ex90N50 values are computed as usual N50 but limited to the top most highly expr
 [(source)](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Transcriptome-Contig-Nx-and-ExN50-stats)
 
 ## Transcriptome annotation completeness
+
+BUSCO (Benchmarking Universal Single-Copy Orthologs) allows a measure for quantitative assessment of genome/transcriptome/proteome based on evolutionarily informed expectations of gene content. Details for this tool are here: [BUSCO](https://busco.ezlab.org/)
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -494,9 +533,27 @@ Ex90N50 values are computed as usual N50 but limited to the top most highly expr
 
 ![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
 
+
+> ### {% icon question %} Questions
+>
+> 1. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> >
+> {: .solution}
+>
+{: .question}
+
 ## Filter low expression transcripts
 
-TODO: presentation and aim of this part
+Most downstream analyses should be applied to the entire set of assembled transcripts, including functional annotation and differential expression analysis.
+If you do decide that you want to filter transcripts to exclude those that are lowly expressed, you can use the following step.
+
+Be cautious in filtering transcripts solely based on expression values, as you can easily discard biologically relevant transcripts from your data.
+Ideally, any filtering would consider a combination of expression values and functional annotation data, and filtering is currently 
+more of an art than a science, and again, simply not needed in most circumstances unless you have a very clear objective in doing so.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -523,9 +580,20 @@ TODO: presentation and aim of this part
 >
 {: .hands_on}
 
-## Checking of the assembly statistics after cleaning
+> ### {% icon question %} Questions
+>
+> 1. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> >
+> {: .solution}
+>
+{: .question}
 
-TODO: presentation and aim of this part
+
+## Checking of the assembly statistics after cleaning
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -534,6 +602,17 @@ TODO: presentation and aim of this part
 >
 {: .hands_on}
 
+> ### {% icon question %} Questions
+>
+> 1. TODO
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. TODO
+> >
+> {: .solution}
+>
+{: .question}
 
 # Annotation
 ## Generate gene to transcript map
