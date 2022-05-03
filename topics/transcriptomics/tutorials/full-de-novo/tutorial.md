@@ -52,16 +52,16 @@ Examining non-model organisms can provide novel insights into the mechanisms und
 
 # Get data (10 minutes)
 
-To cover this tutorial, we will use a toy dataset dedicated to practise. This dataset is composed of 6 RNA-seq samples (paired-send sequencing, 100bp) downsampled to 10,000 reads.
-The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 conditions (diet) with 3 replicates : force-feeding (A) or not (B).
+To cover this tutorial, we will use a toy dataset dedicated to practise. This dataset is composed of 6 RNA-seq samples (paired-end sequencing, 100bp) downsampled to 10,000 reads.
+The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 conditions (diet) : force-feeding (A) or not (B), with 3 replicates per condition. 
 
 > ### {% icon hands_on %} Hands-on: Data upload
 >
-> 1. Create a new history for this tutorial
+> 1. **Create a new history for this tutorial**
 >
 >    {% snippet faqs/galaxy/histories_create_new.md %}
 >
-> 2. Import the 12 `fq.gz` into a `List of Pairs` collection named `fastq_raw`
+> 2. **Import the 12 `fq.gz` into a `List` collection named `fastq_raw`**
 >    - Option 1: from a shared data library (ask your instructor)
 >    - Option 2: from Zenodo using the URLs given below
 >
@@ -82,15 +82,15 @@ The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 cond
 >    https://zenodo.org/record/3541678/files/B3_right.fq.gz
 >    ```
 >
->    {% snippet faqs/galaxy/datasets_import_via_link.md collection=true collection_type="List of Pairs" collection_name="fastq_raw" %}
+>    {% snippet faqs/galaxy/datasets_import_via_link.md collection=true collection_type="List" collection_name="fastq_raw" %}
 >    {% snippet faqs/galaxy/datasets_import_from_data_library.md %}
+>    {% snippet faqs/galaxy/datasets_rename.md datatype="fastq.gz" name="fastq_raw" %}
 >
-> 3. Rename the datasets
-> 4. Check that the datatype
+> 3. **Check that the datatype is `fastq.gz`**
 >
->    {% snippet faqs/galaxy/datasets_change_datatype.md datatype="datatypes" %}
+>    {% snippet faqs/galaxy/datasets_change_datatype.md datatype="fastq.gz" %}
 >
-> 5. Add to each database a tag corresponding to ...
+> 4. **Add tag(s) to this dataset (for example : `RAW` and `FASTQ`)**
 >
 >    {% snippet faqs/galaxy/datasets_add_tag.md %}
 >
@@ -125,17 +125,21 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
 >   - *"Short read data from your current history"*: `fastq_raw` (collection)
->
+> 2. **Rename and tag output collection**
+>    - *"FastQC on collection XX: Webpage"* -> `FastQC : raw`
+>   
 {: .hands_on}
-
+>
 > ### {% icon question %} Questions
 >
 > What can you tell about the overall quality of the dataset ?
-
 >
 > > ### {% icon solution %} Solution
 > >
-> > Click on "*FastQC on collection XX: Webpage*" box in your history to see all the 12 QC reports.
+> > Click on "*FastQC : raw*" box in your history to see all the 12 QC reports.  
+> > No, it is not convenient at all to check one by one !   
+> > Let's use a very usefull tool in Bioinformatics : MultiQC.
+>
 > {: .solution}
 >
 {: .question}
@@ -154,24 +158,28 @@ Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to a
 >    - In *"Results"*:
 >        - {% icon param-repeat %} *"Insert Results"*
 >            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*:
+>                - In *"FastQC output"*: in dataset collections, select `XX: FastQC : raw`
 >                    - *"Type of FastQC output?"*: `Raw data`
 >                    - *"FastQC output"*: `FastQC on data XX: fastq_raw`
 >	 - *"Report title"*: `FastQC on raw data` 
 >	 - *"Use only flat plots (non-interactive images)"*: `No` 
 >	 - *"Output the multiQC plots raw data?"*: `No`
 >	 - *"Output the multiQC log file?"*: `No`
+> 2. **Rename and tag output collection**
+    - *"MultiQC on data XX: Webpage"* -> `MultiQC : raw`
 >
-{: .hands_on} -->
+{: .hands_on}
 
-### {% icon question %} Questions
+> ### {% icon question %} Questions
 >
-> 1. TODO
+> 1. If the Phred score of the mean quality of sequences at base 40 is higher than 30, what does it means ?
+> 2. What can you tell about the overall quality of the dataset ? Is it Homogeneous ?
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. TODO
-> >
+> > 1. It means that the sequencing error rate is less than 1 base in every 1,000 bases. Score Q = -10log(E)
+> > 2. Yes but adapter trimming is necessary.
+>
 > {: .solution}
 >
 {: .question}
