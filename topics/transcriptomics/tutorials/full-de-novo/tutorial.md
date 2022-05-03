@@ -50,18 +50,10 @@ Examining non-model organisms can provide novel insights into the mechanisms und
 >
 {: .agenda}
 
-# Read cleaning (20 minutes)
+# Get data (10 minutes)
 
-Known sequencing biases:
-- Unknown nucleotides (Ns)
-- Bad quality nucleotides
-- Hexamers biases (Illumina. Now corrected ?)
-
-Why do we need to correct those?
-- To remove a lot of sequencing errors (detrimental to the vast majority of assemblers)
-- Because most de-bruijn graph based assemblers can’t handle unknown nucleotides
-
-## Get data
+To cover this tutorial, we will use a toy dataset dedicated to practise. This dataset is composed of 6 RNA-seq samples (paired-send sequencing, 100bp) downsampled to 10,000 reads.
+The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 conditions (diet) with 3 replicates : force-feeding (A) or not (B).
 
 > ### {% icon hands_on %} Hands-on: Data upload
 >
@@ -104,16 +96,30 @@ Why do we need to correct those?
 >
 {: .hands_on}
 
-## Quality control  
-   
+# Quality control and read cleaning (30 minutes)
+
 The first step of every sequencing data analysis must be **quality control**.   
   
 Indeed, there are many possible sources of bias arising from :
 - **biological sampling** (contamination, low complexity...)
 - **library preparation** (adapters and primers sequences, polyA/T tails...)
 - **sequencing** (sequencing errors, optical duplicates, bad coverage...)   
-    
+
+As a result, sequencing reads might contain :
+- Unknown nucleotides (Ns)
+- Bad quality nucleotides
+- Unwanted sequences
+- Hexamers biases (Illumina. Now corrected ?) 
+ 
+**Why do we need to correct those?**
+- To remove a lot of sequencing errors (detrimental to the vast majority of assemblers)
+- Because most de-bruijn graph based assemblers can’t handle unknown nucleotides
+
+
+## Quality control with **fastqc**
+   
 To get an overview of the sequencing data quality, we will use [**fastqc** (Simon Andrews, 2010) ](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) : *"fastqc provides a modular set of analyses which you can use to give a quick impression of whether your data has any problems of which you should be aware before doing any further analysis."* 
+    
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -121,6 +127,42 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >   - *"Short read data from your current history"*: `fastq_raw` (collection)
 >
 {: .hands_on}
+
+> ### {% icon question %} Questions
+>
+> What can you tell about the overall quality of the dataset ?
+
+>
+> > ### {% icon solution %} Solution
+> >
+> > Click on "*FastQC on collection XX: Webpage*" box in your history to see all the 12 QC reports.
+> {: .solution}
+>
+{: .question}
+
+> > ### {% icon comment %} Comment
+> >
+> > For an exhaustive review of **fastqc** outputs, let's go to **Quality Control tutorial**.
+> {: .comment}
+>
+
+Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to aggrate all individual results in one summary.
+
+> ### {% icon hands_on %} Hands-on: Task description
+>
+> 1. **MultiQC** {% icon tool %} with the following parameters:
+>    - In *"Results"*:
+>        - {% icon param-repeat %} *"Insert Results"*
+>            - *"Which tool was used generate logs?"*: `FastQC`
+>                - In *"FastQC output"*:
+>                    - *"Type of FastQC output?"*: `Raw data`
+>                    - *"FastQC output"*: `FastQC on data XX: fastq_raw`
+>	 - *"Report title"*: `FastQC on raw data` 
+>	 - *"Use only flat plots (non-interactive images)"*: `No` 
+>	 - *"Output the multiQC plots raw data?"*: `No`
+>	 - *"Output the multiQC log file?"*: `No`
+>
+{: .hands_on} -->
 
 ### {% icon question %} Questions
 >
@@ -155,7 +197,7 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 
 
 
-## Sequencing error correction with **Rcorrector**  
+<!-- ## Sequencing error correction with **Rcorrector**  
   
 To address the sequencing errors in the raw sequencing reads, we can use [**Rcorrector** (Song et al., 2015)](https://github.com/mourisl/Rcorrector) : *a kmer-based error correction method for RNA-seq data, based on the path search algorithm.*  
 
@@ -164,9 +206,9 @@ To address the sequencing errors in the raw sequencing reads, we can use [**Rcor
 ![Rcorrector_algo](../../images/full-de-novo/Rcorrector_path-search-algo.png)   
 
 Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer (k=4) in the De Bruijn graph for the r=AAGTCATAA read sequence. Numbers in the vertices represent k-mer counts. The first (top) path corresponds to the original read’s representation in the De Bruijn graph. The extension is pruned after the first step, AGTC →GTCA, as the count M(GTCA)=4 falls below the local cutoff (determined based on the maximum k-mer count (494) of the four possible successors of AGTC). The second path (yellow) has higher k-mer counts but it introduces four corrections, changing the read into AAGTCCGTC. The third path (blue) introduces only two corrections, to change the sequence into AAGTCGTTA, and is therefore chosen to correct the read. The fourth (bottom) path is pruned as the k-mer count for GTCT does not pass the threshold. Paths 2 and 3 are likely to indicate paralogs and/or splice variants of this gene.   
-   
 
-> ### {% icon hands_on %} Hands-on: Task description
+
+<!  ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Rcorrector** {% icon tool %} with the following parameters: 
 >    - *"Is this library paired- or single-end?"*: `Paired-end (as collection)`
@@ -195,11 +237,11 @@ Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer
 > > 3. `53.51%`
 > {: .solution}
 >
-{: .question}
+{: .question} -->
 
 ## rRNA removal with **Bowtie2**  
   
-One of the main source of contamination of RNA-seq samples is **ribosomal RNA**. Indeed, ~90% of total RNA correspond to rRNA. Before sequencing, ribodepletion and polyA selection are common mmethods to clean the samples, but it does not filter out all rRNA. After sequencing, removal rRNA reads from raw reads and detect rRNA transcripts might usefull.
+One of the main source of contamination of RNA-seq samples is **ribosomal RNA**. Indeed, ~90% of total RNA correspond to rRNA. Before sequencing, ribodepletion and polyA selection are common mmethods to clean the samples, but it does not filter out all rRNA. After sequencing, remove rRNA reads from raw reads and detect rRNA transcripts might be usefull.
 
 To do so, we use [**Bowtie 2**](https://github.com/BenLangmead/bowtie2) which is an ultrafast and memory-efficient tool for aligning sequencing reads to reference sequences. 
 Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : high quality ribosomal RNA database.
@@ -224,9 +266,12 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 {: .hands_on}
 
 ### {% icon question %} Questions
->
-> 1. TODO
-> 2. TODO
+> 
+> 1. For sample YY :
+> 1.1. What is the mapping rate ? What does it means ?
+> 2. For sample HH :
+> 2.1. What is mapping rate ?  
+> 2.2. Which file should you continue the analysis with ?
 >
 > > ### {% icon solution %} Solution
 > >
@@ -239,7 +284,6 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 
 
 ## Read cleaning with **Trimmomatic** 
-
 
 
 > ### {% icon hands_on %} Hands-on: Task description
