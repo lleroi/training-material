@@ -407,14 +407,6 @@ The de novo transcriptome assembly needs to be evaluated before any further down
 - The completeness according to conserved ortholog content.
 - The RNA-Seq read representation of the assembly (i.e. coverage) to ensure that reads using for the assembly are mapped back to the assembled transcriptome.
 
-Other criterions/software can be used, as:
-
-- The representation of full-length reconstructed protein-coding genes, by searching the assembled transcripts against a database of known protein sequences.
-- Compute DETONATE scores. DETONATE provides a rigorous computational assessment of the quality of a transcriptome assembly, and is useful if you want to run several assemblies using different parameter settings or using altogether different tools. That assembly with the highest DETONATE score is considered the best one.
-- TransRate generates a number of useful statistics for evaluating your transcriptome assembly. Read about TransRate here: http://genome.cshlp.org/content/26/8/1134. Note that certain statistics may be biased against the large numbers of transcripts that are very lowly expressed. Consider generating TransRate statistics for your transcriptome before and after applying a minimum expression-based filter.
-- rnaQUAST a quality assessment tool for de novo transcriptome assemblies.
-
-
 ## Checking of the assembly statistics
 
 ***Trinity Statistics*** displays the summary statistics for a fasta file.
@@ -445,17 +437,17 @@ Other criterions/software can be used, as:
 
 ## Remapping on the raw transcriptome
 
-This step aims to Examine the RNA-Seq read representation of the assembly.
-Ideally, at least ~80% of your input RNA-Seq reads are represented by your transcriptome assembly.
-The remaining unassembled reads likely corresponds to lowly expressed transcripts with insufficient coverage to enable 
-assembly, or are low quality or aberrant reads.
+Remapping reads back to assembly aims to examine the RNA-Seq read representation of the assembly.
 
 Several methods available for estimating transcript abundance and these include alignment-based methods 
 (aligning reads to the transcript assembly) and alignment-free methods 
 (examining k-mer abundances in the reads and in the resulting assembly).
-
 Alignment-free method such as Kallisto and Salmon are way more faster than alignment-based quantification methods.
 In return, they cannot provide alignment files (BAM), only a coverage table.
+
+Ideally, at least ~80% of your input RNA-Seq reads are represented by your transcriptome assembly.
+The remaining unassembled reads likely corresponds to lowly expressed transcripts with insufficient coverage to enable 
+assembly, or are low quality or aberrant reads.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -538,9 +530,9 @@ In return, they cannot provide alignment files (BAM), only a coverage table.
 
 ## Compute contig Ex90N50 statistic and Ex90 transcript count
 
-### Definition
+An alternative to the contig Nx statistic that could be considered more appropriate for transcriptome assembly data is the ExN50 statistic. Here, the N50 statistic is computed as usual but limited to the top most highly expressed genes that represent x% of the total normalized expression data. The gene expression is take as the sum of the transcript isoform expression and the gene length is computed as the expression-weighted mean of isoform lengths.
 
-Ex90N50 values are computed as usual N50 but limited to the top most highly expressed transcripts that represent 90% of the total normalized expression data. 
+In case of Ex90N50, values are computed as usual N50 but limited to the top most highly expressed transcripts that represent 90% of the total normalized expression data. 
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -574,7 +566,6 @@ BUSCO (Benchmarking Universal Single-Copy Orthologs) allows a measure for quanti
 >
 {: .hands_on}
 
-![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
 
 
 > ### {% icon question %} Questions
@@ -658,11 +649,11 @@ more of an art than a science, and again, simply not needed in most circumstance
 {: .question}
 
 # Annotation
-## Generate gene to transcript map
 
 To get a robust transcriptome annotation, it is important to annotate the assembled transcripts and derived putative proteins as well.  
 To do so, we will first predict coding regions then perform similarity search on UniprotKB/SwissProt. Then, we can seach for signal peptides, transmembrane domains and profiles to refine the annotation. Finally, the results from previous steps can be summarized using Trinotate.  
 
+## Generate gene to transcript map
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Generate gene to transcript map** {% icon tool %} with the following parameters:
@@ -675,13 +666,11 @@ To do so, we will first predict coding regions then perform similarity search on
 [TransDecoder](https://github.com/TransDecoder/TransDecoder/releases) identifies candidate coding regions within transcript sequences generated by Trinity. TransDecoder identifies candidate protein-coding regions based on nucleotide composition, open reading frame (ORF) length, and (optional) Pfam domain content.
 
 TransDecoder identifies likely coding sequences based on the following criteria:
-	- a minimum length open reading frame (ORF) is found in a transcript sequence
-	- a log-likelihood score similar to what is computed by the GeneID software is > 0.
-	- the above coding score is greatest when the ORF is scored in the 1st reading frame as compared to scores in the other 5 reading frames.
-	- if a candidate ORF is found fully encapsulated by the coordinates of another candidate ORF, the longer one is reported. However, a single transcript can report multiple ORFs (allowing for operons, chimeras, etc).
-	- optional the putative peptide has a match to a Pfam domain above the noise cutoff score.
-
-
+- a minimum length open reading frame (ORF) is found in a transcript sequence
+- a log-likelihood score similar to what is computed by the GeneID software is > 0.
+- the above coding score is greatest when the ORF is scored in the 1st reading frame as compared to scores in the other 5 reading frames.
+- if a candidate ORF is found fully encapsulated by the coordinates of another candidate ORF, the longer one is reported. However, a single transcript can report multiple ORFs (allowing for operons, chimeras, etc).
+- optional the putative peptide has a match to a Pfam domain above the noise cutoff score.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -768,9 +757,7 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 
 # Differential Expression (DE) Analysis
 
-TODO: presentation and aim of this part
-
-## Remapping on the filtered transcriptome using
+## Remapping on the filtered transcriptome
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -815,6 +802,9 @@ TODO: presentation and aim of this part
 
 ## Merge the mapping tables and compute a TMM normalization
 
+Unlike quality filter step, DE analysis requires to provide for each factor, counts of samples in each category.
+After matrix creation, we will create a design sample file that will describe the experiment and the comparison we want.
+
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Build expression matrix** {% icon tool %} with the following parameters:
@@ -837,6 +827,13 @@ TODO: presentation and aim of this part
 
 ## RNASeq samples quality check
 
+Once we've performed transcript quantification for each biological replicates, it's good to examine 
+the data to ensure that biological replicates are well correlated, and also to investigate relationships among samples.
+
+If there are any obvious discrepancies among sample and replicate relationships such as due to accidental 
+mis-labeling of sample replicates, or strong outliers or batch effects, we want to identify them before 
+proceeding to subsequent data analyses (such as differential expression).
+
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **RNASeq samples quality check** {% icon tool %} with the following parameters:
 >    - *"Expression matrix"*: `Build expression matrix: estimated RNA-Seq fragment isoform counts (raw counts)`
@@ -844,7 +841,10 @@ TODO: presentation and aim of this part
 >
 {: .hands_on}
 
+![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
+
 ## Differential expression analysis
+
 
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **Differential expression analysis** {% icon tool %} with the following parameters:
