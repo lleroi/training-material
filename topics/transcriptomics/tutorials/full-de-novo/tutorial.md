@@ -546,10 +546,10 @@ In case of Ex90N50, values are computed as usual N50 but limited to the top most
 >
 {: .hands_on}
 
-### What we get
+**What we get**
 ![ExN50_plot_toy_dataset](../../images/full-de-novo/ExN50_plot_toy_dataset.png)
 
-### What we should get with a real dataset
+**What we should get with a real dataset**
 ![ExN50_plot](../../images/full-de-novo/ExN50_plot.png)
 [(source)](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Transcriptome-Contig-Nx-and-ExN50-stats)
 
@@ -841,10 +841,30 @@ proceeding to subsequent data analyses (such as differential expression).
 >
 {: .hands_on}
 
+**RNASeq samples quality check** generated 4 outputs:
+
+- **Pairwise comparisons of replicate** log(CPM) values. Data points more than 2-fold different are highlighted in red.
+- **Pairwise MA plots** (x-axis: mean log(CPM), y-axis log(fold_change)).
+- **Replicate Pearson correlation heatmap**. The heatmap gives an overview of similarities and dissimilarities between samples: the color represents the distance between the samples.
+- **Principal Component Analysis (PCA)**. It shows the samples in the 2D plane spanned by their first two principal components. Each replicate is plotted as an individual data point. This type of plot is useful for visualizing the overall effect of experimental covariates and batch effects.
+
 ![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
 
 ## Differential expression analysis
 
+DESeq2 (Love et al. 2014) is a great tool for dealing with RNA-seq data and running Differential Gene Expression (DGE) analysis.
+It takes read count files from different samples, combines them into a big table (with genes in the rows and samples in the columns)
+and applies normalization for sequencing depth and library composition.
+
+DESeq2 also runs the Differential Gene Expression (DGE) analysis, which has two basic tasks:
+
+- Estimate the biological variance using the replicates for each condition
+- Estimate the significance of expression differences between any two conditions
+
+This expression analysis is estimated from read counts and attempts are made to correct for variability in measurements using replicates, 
+that are absolutely essential for accurate results. 
+For your own analysis, we advise you to use at least 3, but preferably 5 biological replicates per condition. 
+It is possible to have different numbers of replicates per condition.
 
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **Differential expression analysis** {% icon tool %} with the following parameters:
@@ -854,7 +874,13 @@ proceeding to subsequent data analyses (such as differential expression).
 >
 {: .hands_on}
 
+The output from running the DE analysis containing files for each of the pairwise comparisons performed and the corresponding MA and volcano plot.
+
 ## Extract and cluster differentially expressed transcripts
+
+An initial step in analyzing differential expression is to extract those transcripts that are most differentially 
+expressed (most significant FDR and fold-changes) and to cluster the transcripts according to their 
+patterns of differential expression across the samples.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -874,7 +900,25 @@ proceeding to subsequent data analyses (such as differential expression).
 >
 {: .hands_on}
 
+All genes that have P-values at most 1e-3 and are at least 2^2 fold differentially expressed are extracted for each of the earlier pairwise DE comparisons.
+Different kinds of summary files and plots are generated:
+- Sample correlation matrix heatmap
+- DE gene vs. samples heatmap
+
+To more seriously study and define your gene clusters, you will need to interact with the data as described below.
+The clusters and all required data for interrogating and defining clusters is all saved with an R-session, 
+locally with the file 'all.RData'.
+
+
 ## Partition genes into expression clusters
+
+The DE genes shown in the above heatmap can be partitioned into gene clusters with similar expression patterns by one of several available methods.
+
+There are three different methods for partitioning genes into clusters:
+- Use K-means clustering to define K gene sets. This does not leverage the already hierarchically clustered genes as shown in the heatmap, and instead uses a least-sum-of-squares method to define exactly k gene clusters.
+- Cut the hierarchically clustered genes into exactly K clusters.
+- (Recommended) cut the hierarchically clustered gene tree at X percent height of the tree.
+
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
