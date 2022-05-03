@@ -206,14 +206,13 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **Bowtie2** {% icon tool %} with the following parameters:
->    - *"Is this single or paired library"*: `Paired-end`
->        - *"FASTA/Q file #1"*: `R1_corrected`
->        - *"FASTA/Q file #2"*: `R2_corrected`
+>    - *"Is this single or paired library"*: `Paired-end Dataset Collection`
+>	 - *"FASTQ Paired Dataset"* : `fastq_raw`  
 >        - *"Write unaligned reads (in fastq format) to separate file(s)"*: `Yes`
 >        - *"Write aligned reads (in fastq format) to separate file(s)"*: `No`
 >        - *"Do you want to set paired-end options?"*: `No`
 >    - *"Will you select a reference genome from your history or use a built-in index?"*: `Use a built-in genome index`
->        - *"Select reference genome"*: `Silva Ribosomal Database`
+>        - *"Select reference genome"*: `SILVA LSU+SSU Reference sequence databank`
 >    - *"Set read groups information?"*: `Do not set`
 >    - *"Select analysis mode"*: `1:Default setting only`
 >        - *"Do you want to use presets?"*: `Very sensitive end-to-end (--very-sensitive)`
@@ -271,7 +270,7 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >
 >    > ### {% icon comment %} Comment
 >    >
->    > You can check the Trimmomatic log files to get the number of read before and after the cleaning. To do se, click on the "show details" **i** icon, then click on *Tool Standard Output:stdout*
+>    > You can check the Trimmomatic log files to get the number of read before and after the cleaning. To do so, click on the "show details" **i** icon, then click on *Tool Standard Output:stdout*
 >    > ```
 >    > Input Read Pairs: 10000
 >    > Both Surviving: 8804 (88.04%)
