@@ -129,7 +129,7 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >    - *"FastQC on collection XX: Webpage"* -> `FastQC : raw`
 >   
 {: .hands_on}
->
+
 > ### {% icon question %} Questions
 >
 > What can you tell about the overall quality of the dataset ?
@@ -139,7 +139,7 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 > > Click on "*FastQC : raw*" box in your history to see all the 12 QC reports.  
 > > No, it is not convenient at all to check one by one !   
 > > Let's use a very usefull tool in Bioinformatics : MultiQC.
->
+> > 
 > {: .solution}
 >
 {: .question}
@@ -179,10 +179,12 @@ Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to a
 > >
 > > 1. It means that the sequencing error rate is less than 1 base in every 1,000 bases. Score Q = -10log(E)
 > > 2. Yes but adapter trimming is necessary.
->
+> >
 > {: .solution}
 >
 {: .question}
+
+>
 
 <!-- ## Quality control with **MultiQC** - step 2/2
 
@@ -273,23 +275,36 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 >
 {: .hands_on}
 
-### {% icon question %} Questions
+> ### {% icon question %} Questions
 > 
-> 1. For sample YY :
-> 1.1. What is the mapping rate ? What does it means ?
-> 2. For sample HH :
+> 1. For sample A1 :
+> 1.1. What is the mapping rate ? What does it means ?   
+> 2. For sample A2 :
 > 2.1. What is mapping rate ?  
-> 2.2. Which file should you continue the analysis with ?
+> 2.2. Which file should you continue the analysis with ?   
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. TODO
-> > 2. TODO
+> > 1.1. 
+> > ```
+> > 0.00% overall alignment rate
+> > ```
+> > No rRNA was detected in the sample.   
+> > 2.1.    
+> > ```
+> > 0.01% overall alignment rate
+> > ```   
+> > 2.2. We should discard all read mapping to rRNA sequences and continue the analysis with **unmapped** reads.
 > >
 > {: .solution}
 >
 {: .question}
 
+> ### {% icon comment %} Other options
+>  Other filtering strategiies can be used, like [**SortMeRNA** (Kopylova et al. 2012)](https://github.com/biocore/sortmerna), a tool developped to filter out rRNA from metatranscriptomic data. It is fast and it can discover new rRNA sequences.
+> There are also HMM-based tools such as [**RNAmmer** (Lagesen et al. 2007)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1888812/) and [**Barrnap** (Seemann et al. 2013)](https://github.com/tseemann/barrnap), which predicts the location of ribosomal RNA genes in genomes.
+> 
+{: .comment}
 
 ## Read cleaning with **Trimmomatic** 
 
@@ -334,6 +349,13 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >    {% snippet faqs/galaxy/collections_rename.md %}
 >
 {: .hands_on}
+>
+>
+> ### {% icon comment %} Other option 
+> You can also use [**Trim Galore** (Kueger et al. 2012)](https://github.com/FelixKrueger/TrimGalore), to trim raw sequencing data.
+> 
+{: .comment}
+
 
 ## Quality control after cleaning
 
@@ -344,9 +366,27 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >
 {: .hands_on}
 
+> ### {% icon hands_on %} Hands-on: Task description
+>
+> 1. **MultiQC** {% icon tool %} with the following parameters:
+>    - In *"Results"*:
+>        - {% icon param-repeat %} *"Insert Results"*
+>            - *"Which tool was used generate logs?"*: `FastQC`
+>                - In *"FastQC output"*: in dataset collections, select `XX: FastQC : raw`
+>                    - *"Type of FastQC output?"*: `Cleaned data`
+>                    - *"FastQC output"*: `FastQC on data XX: fastq_cleaned`
+>	 - *"Report title"*: `FastQC on raw data` 
+>	 - *"Use only flat plots (non-interactive images)"*: `No` 
+>	 - *"Output the multiQC plots raw data?"*: `No`
+>	 - *"Output the multiQC log file?"*: `No`
+> 2. **Rename and tag output collection**
+    - *"MultiQC on data XX: Webpage"* -> `MultiQC : cleaned`
+>
+{: .hands_on}
+
 # Assembly (120 minutes - computing)
 
-To acceses at the transcritps information, we need to reconstruct all full-length transcripts from short reads. Such operation require dedicated assemblers as the process of assembling a transcriptome violates many of the assumptions of genomic assemblers. For example, uniform coverage and the ‘one locus – one contig’ paradigm are not valid for RNA. An accurate transcriptome assembler will produce one contig per distinct transcript (isoform) rather than per locus, and different transcripts will have different coverage, reflecting their different expression levels.
+To get to the transcripts information, we need to reconstruct all full-length transcripts from short reads. Such operation requires dedicated assemblers as the process of assembling a transcriptome violates many of the assumptions of genomic assemblers. For example, uniform coverage and the ‘one locus – one contig’ paradigm are not valid for RNA. An accurate transcriptome assembler will produce one contig per distinct transcript (isoform) rather than per locus, and different transcripts will have different coverage, reflecting their different expression levels.
 
 > ### {% icon comment %} Comment
 > 
@@ -354,8 +394,8 @@ To acceses at the transcritps information, we need to reconstruct all full-lengt
 > 
 {: .comment}
 
-We will use *Trinity*, a de novo transcriptome assembler for short sequencing reads. 
-*Trinity* is the most widely used de novo transcriptome assembler and in continuous development since several years.
+We will use *Trinity*, a *de novo* transcriptome assembler for short sequencing reads. 
+*Trinity* is the most widely used *de novo* transcriptome assembler and is in continuous development since several years.
 All information about Trinity assembler are here [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
 
 ## Assembly with **Trinity**
@@ -369,8 +409,9 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 >    - *"Run in silico normalization of reads"*: `No`
 >    - In *"Additional Options"*:
 >        - *"Use the genome guided mode?"*: `No`
-> 2. **Rename** the Trinity output
->    - `Trinity on data 52, data 51, and others: Assembled Transcripts` -> `transcriptome_raw.fasta`
+> 2. **Rename** the Trinity outputs
+>    - `Trinity on data XX, data YY, and others: Assembled Transcripts` -> `transcriptome_raw.fasta`
+>    - `Trinity on data XX, data YY, and others: Gene to transcripts map` -> `Gene_to_transcripts_map_raw`
 >
 >    {% snippet faqs/galaxy/datasets_rename.md %}
 >
@@ -378,20 +419,23 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 
 > ### {% icon question %} Questions
 >
-> 1. TODO
+> 2. How are named the transcripts by Trinity in `transcriptome_raw.fasta` assembly ? What does it mean ?
+> 1. What is the file `Gene_to_transcripts_map_raw` ?
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. TODO
-> >
+> > 1. Trinity groups transcripts into clusters based on shared sequence content. Such a transcript cluster is very loosely referred to as a 'gene'. This information is encoded in the Trinity fasta accession. The accession encodes the Trinity 'gene' and 'isoform' information. For example, the accession 'TRINITY_DN1000_c115_g5_i1' indicates Trinity read cluster 'TRINITY_DN1000_c115', gene 'g5', and isoform 'i1'. The Path information stored in the header ("path=[31015:0-148 23018:149-246]") indicates the path traversed in the Trinity compacted de Bruijn graph to construct that transcript. 
+> > 
+> > 2. A Trinity gene is a collection of related transcripts. This file lists genes and related isoforms.
+> > [Learn more about Trinity output.](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Output-of-Trinity-Assembly)
 > {: .solution}
 >
 {: .question}
 
 
 > ### {% icon comment %} Try it on!
-> *rnaSPAdes* is a most recent assembler and can outperform *Trinity* results most of the time but not always. You can do
-> the de novo assembly with **rnaSPAdes** {% icon tool %} and compare the results!
+> *rnaSPAdes* is a more recent assembler and can outperform *Trinity* results most of the time but not always. You can do
+> the *de novo* assembly with **rnaSPAdes** {% icon tool %} and compare the results!
 > 
 > 
 > > ### {% icon hands_on %} Hands-on: Task description
@@ -410,10 +454,10 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 
 # Assembly assessment / cleaning
 
-The de novo transcriptome assembly needs to be evaluated before any further downstream analyses in order to check if it reach sufficient quality criterion. We generally use 3 criterons to perform such analysis:
-- The contiguity/metrics such as the number of transcripts, isoforms, the N50, etc.
-- The completeness according to conserved ortholog content.
-- The RNA-Seq read representation of the assembly (i.e. coverage) to ensure that reads using for the assembly are mapped back to the assembled transcriptome.
+The *de novo* transcriptome assembly needs to be evaluated before any further downstream analyses in order to check if it reaches sufficient quality criteria. We generally use 3 criteria to perform such analysis:
+- **Contiguity/metrics** such as the number of transcripts, isoforms, the N50, etc.
+- **Completeness** according to conserved ortholog content.
+- **RNA-Seq read representation of the assembly** (i.e. coverage) to ensure that reads used for the assembly are mapped back to the assembled transcriptome.
 
 ## Checking of the assembly statistics
 
