@@ -61,7 +61,7 @@ The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 cond
 >
 >    {% snippet faqs/galaxy/histories_create_new.md %}
 >
-> 2. **Import the 12 `fq.gz` into a `List` collection named `fastq_raw`**
+> 2. **Import the 12 `fq.gz` into a `List` collection named `fastq_raw` AND into a `List of Pairs` collection named `fastq_raw_paired`**
 >    - Option 1: from a shared data library (ask your instructor)
 >    - Option 2: from Zenodo using the URLs given below
 >
@@ -83,9 +83,11 @@ The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 cond
 >    ```
 >
 >    {% snippet faqs/galaxy/datasets_import_via_link.md collection=true collection_type="List" collection_name="fastq_raw" %}
+>    {% snippet faqs/galaxy/datasets_import_via_link.md collection=true collection_type="List of Pairs" collection_name="fastq_raw_paired" %}
 >    {% snippet faqs/galaxy/datasets_import_from_data_library.md %}
 >    {% snippet faqs/galaxy/datasets_rename.md datatype="fastq.gz" name="fastq_raw" %}
 >
+> 3. When building collection `fastq_raw_paired`, associate each forward file to corresponding reverse file then rename each pair without extension, e.g. `A1`, `A2` etc.
 > 3. **Check that the datatype is `fastq.gz`**
 >
 >    {% snippet faqs/galaxy/datasets_change_datatype.md datatype="fastq.gz" %}
@@ -125,8 +127,11 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
 >   - *"Short read data from your current history"*: `fastq_raw` (collection)
-> 2. **Rename and tag output collection**
->    - *"FastQC on collection XX: Webpage"* -> `FastQC : raw`
+> 2. **Rename and tag output collections**
+>    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_Webpage`
+>    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_data`
+> 
+> {% snippet faqs/galaxy/workflows_rename_output.md %}
 >   
 {: .hands_on}
 
@@ -136,8 +141,8 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >
 > > ### {% icon solution %} Solution
 > >
-> > Click on "*FastQC : raw*" box in your history to see all the 12 QC reports.  
-> > No, it is not convenient at all to check one by one !   
+> > Click on "*FastQC_raw_Webpage*" box in your history to see all the 12 QC reports.  
+> > You can see that it's not convenient at all to check the reports one by one !   
 > > Let's use a very usefull tool in Bioinformatics : MultiQC.
 > > 
 > {: .solution}
@@ -158,15 +163,15 @@ Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to a
 >    - In *"Results"*:
 >        - {% icon param-repeat %} *"Insert Results"*
 >            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*: in dataset collections, select `XX: FastQC : raw`
+>                - In *"FastQC output"*: in dataset collections, select `FastQC_raw_data`
 >                    - *"Type of FastQC output?"*: `Raw data`
->                    - *"FastQC output"*: `FastQC on data XX: fastq_raw`
->	 - *"Report title"*: `FastQC on raw data` 
+>	 - *"Report title"*: `Training full-de-novo : raw QC` 
 >	 - *"Use only flat plots (non-interactive images)"*: `No` 
 >	 - *"Output the multiQC plots raw data?"*: `No`
 >	 - *"Output the multiQC log file?"*: `No`
 > 2. **Rename and tag output collection**
-    - *"MultiQC on data XX: Webpage"* -> `MultiQC : raw`
+>    - *"MultiQC on data XX: Webpage"* -> `MultiQC_raw_Webpage`
+>    - *"MultiQC on data XX: Stats"* -> `MultiQC_raw_Stats`
 >
 {: .hands_on}
 
@@ -259,7 +264,7 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **Bowtie2** {% icon tool %} with the following parameters:
 >    - *"Is this single or paired library"*: `Paired-end Dataset Collection`
->	 - *"FASTQ Paired Dataset"* : `fastq_raw`  
+>	 - *"FASTQ Paired Dataset"* : `fastq_raw_paired`  
 >        - *"Write unaligned reads (in fastq format) to separate file(s)"*: `Yes`
 >        - *"Write aligned reads (in fastq format) to separate file(s)"*: `No`
 >        - *"Do you want to set paired-end options?"*: `No`
@@ -271,15 +276,17 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 >    - *"Do you want to tweak SAM/BAM Options?"*: `No`
 >    - *"Save the bowtie2 mapping statistics to the history"*: `Yes`
 > 2. **Rename the resulting datasets**
->    - `Bowtie2 on XX: alignments -> `     
+>    - `Bowtie2 on collection XX: unaligned reads (R)` -> `R1_filtered_reads`     
+>    - `Bowtie2 on collection XX: unaligned reads (L)` -> `R2_filtered_reads` 
+>    - `Bowtie2 on collection XX: mapping stats` -> `filtered_reads_mapping_stats` 
 >
 {: .hands_on}
 
 > ### {% icon question %} Questions
 > 
-> 1. For sample A1 :
+> 1. For sample A3 :
 > 1.1. What is the mapping rate ? What does it means ?   
-> 2. For sample A2 :
+> 2. For sample A1 :
 > 2.1. What is mapping rate ?  
 > 2.2. Which file should you continue the analysis with ?   
 >
@@ -308,12 +315,14 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 
 ## Read cleaning with **Trimmomatic** 
 
+![adapter_trimming](../../images/full-de-novo/adapter_trimming.png)   
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Trimmomatic** {% icon tool %} with the following parameters:
->    - *"Single-end or paired-end reads?"*: `Paired-end (as collection)`
->    - *"Select FASTQ dataset collection with R1/R2 pair"*: `Raw Data`
+>    - *"Single-end or paired-end reads?"*: `Paired-end (two separate input files)`
+>    - *"Input FASTQ file (R1/first of pair)"*: `R1_filtered_reads`
+>    - *"Input FASTQ file (R2/first of pair)"*: `R2_filtered_reads`
 >    - *"Perform initial ILLUMINACLIP step?"*: `Yes`
 >    - *"Adapter sequences to use"*: `TruSeq3 (additional seqs) (paired-ended, for MiSeq and HiSeq)`
 >    - In *"Trimmomatic Operation"*:
@@ -333,11 +342,12 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >                - *"Minimum length of reads to be kept"*: `50`
 >    - *"Output trimmomatic log messages?"*: `Yes`
 > 2. **Rename** the Dataset Collection
->    - `Trimmomatic on collection XX: paired` -> `fastqc_cleaned`
+>    - `Trimmomatic on collection XX: paired` -> `R1_cleaned-reads`
+>    - `Trimmomatic on collection XX: paired` -> `R2_cleaned_reads`
 >
 >    > ### {% icon comment %} Comment
 >    >
->    > You can check the Trimmomatic log files to get the number of read before and after the cleaning. To do so, click on the "show details" **i** icon, then click on *Tool Standard Output:stdout*
+>    > You can check the Trimmomatic log files to get the number of reads before and after cleaning. To do so, click on the "show details" **i** icon, then click on *Tool Standard Output:stdout*
 >    > ```
 >    > Input Read Pairs: 10000
 >    > Both Surviving: 8804 (88.04%)
@@ -362,7 +372,15 @@ t](../../images/full-de-novo/ExN50_plot.png)
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
->   - *"Short read data from your current history"*: `fastqc_cleaned` (collection)
+>   - *"Short read data from your current history"*: `R1_cleaned-reads` (collection)
+> 2. **Rename** outputs : 
+>    - `FastQC on collection XX : Webpage` -> `FastQC_R1_cleaned_Webpage` 
+>    - `FastQC on collection XX : RawData` -> `FastQC_R1_cleaned_Raw` 
+> 3. **FastQC** {% icon tool %} with the following parameters:
+>   - *"Short read data from your current history"*: `R2_cleaned-reads` (collection)
+> 4. **Rename** outputs : 
+>    - `FastQC on collection XX : Webpage` -> `FastQC_R2_cleaned_Webpage` 
+>    - `FastQC on collection XX : RawData` -> `FastQC_R2_cleaned_Raw` 
 >
 {: .hands_on}
 
@@ -372,15 +390,19 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >    - In *"Results"*:
 >        - {% icon param-repeat %} *"Insert Results"*
 >            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*: in dataset collections, select `XX: FastQC : raw`
->                    - *"Type of FastQC output?"*: `Cleaned data`
->                    - *"FastQC output"*: `FastQC on data XX: fastq_cleaned`
->	 - *"Report title"*: `FastQC on raw data` 
+>                - In *"FastQC output"*: in dataset collections, select `FastQC_R1_cleaned`
+>                    - *"Type of FastQC output?"*: `Raw data`
+>        - {% icon param-repeat %} *"Insert Results"*
+>            - *"Which tool was used generate logs?"*: `FastQC`
+>                - In *"FastQC output"*: in dataset collections, select `FastQC_R2_cleaned`
+>                    - *"Type of FastQC output?"*: `Raw data`
+>	 - *"Report title"*: `Training full-de-novo : cleaned QC` 
 >	 - *"Use only flat plots (non-interactive images)"*: `No` 
 >	 - *"Output the multiQC plots raw data?"*: `No`
 >	 - *"Output the multiQC log file?"*: `No`
 > 2. **Rename and tag output collection**
-    - *"MultiQC on data XX: Webpage"* -> `MultiQC : cleaned`
+>    - *"MultiQC on data XX: Webpage"* -> `MultiQC_cleaned_Webpage`
+>    - *"MultiQC on data XX: Stats"* -> `MultiQC_cleaned_Stats`
 >
 {: .hands_on}
 
@@ -396,7 +418,7 @@ To get to the transcripts information, we need to reconstruct all full-length tr
 
 We will use *Trinity*, a *de novo* transcriptome assembler for short sequencing reads. 
 *Trinity* is the most widely used *de novo* transcriptome assembler and is in continuous development since several years.
-All information about Trinity assembler are here [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
+All information about Trinity assembler are here : [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
 
 ## Assembly with **Trinity**
 
@@ -404,12 +426,15 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 >
 > 1. **Trinity** {% icon tool %} with the following parameters:
 >    - *"Are you pooling sequence datasets?"*: `Yes`
->        - *"Paired or Single-end data?"*: `Paired-end collection`
+>        - *"Paired or Single-end data?"*: `Paired-end`
+>            - *"Left/Forward strand reads"*: `R1_cleaned-reads`
+>            - *"Right/Reverse strand reads"*: `R2_cleaned-reads`
 >            - *"Strand specific data"*: `No`
+>            - *"Jaccard Clip options"*: `No`
 >    - *"Run in silico normalization of reads"*: `No`
 >    - In *"Additional Options"*:
 >        - *"Use the genome guided mode?"*: `No`
-> 2. **Rename** the Trinity outputs
+> 2. **Rename** Trinity outputs
 >    - `Trinity on data XX, data YY, and others: Assembled Transcripts` -> `transcriptome_raw.fasta`
 >    - `Trinity on data XX, data YY, and others: Gene to transcripts map` -> `Gene_to_transcripts_map_raw`
 >
@@ -455,13 +480,14 @@ All information about Trinity assembler are here [Trinity](https://github.com/tr
 # Assembly assessment / cleaning
 
 The *de novo* transcriptome assembly needs to be evaluated before any further downstream analyses in order to check if it reaches sufficient quality criteria. We generally use 3 criteria to perform such analysis:
+- **RNA-Seq read representation of the assembly** (i.e. coverage) to ensure that reads used for the assembly are mapped back to the assembled transcriptome.
 - **Contiguity/metrics** such as the number of transcripts, isoforms, the N50, etc.
 - **Completeness** according to conserved ortholog content.
-- **RNA-Seq read representation of the assembly** (i.e. coverage) to ensure that reads used for the assembly are mapped back to the assembled transcriptome.
 
-## Checking of the assembly statistics
 
-***Trinity Statistics*** displays the summary statistics for a fasta file.
+<!--## Checking assembly statistics
+
+**Trinity Statistics*** displays the summary statistics for a fasta file.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -485,9 +511,9 @@ The *de novo* transcriptome assembly needs to be evaluated before any further do
 > {: .solution}
 >
 {: .question}
+-->
 
-
-## Remapping on the raw transcriptome
+## Remapping reads on raw transcriptome
 
 Remapping reads back to assembly aims to examine the RNA-Seq read representation of the assembly.
 
@@ -506,21 +532,17 @@ assembly, or are low quality or aberrant reads.
 > 1. **Align reads and estimate abundance** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_raw.fasta`
 >    - *"Paired or Single-end data?"*: `Paired`
->        - *"Left/Forward strand reads"* -> `Multiple datasets`
->            - Click on the *Folder* button at the right
->                - *Type to Search*: `left`
->                - Select the 6 `Trimmomatic on ..._left.fq.gz`
->        - *"Right/Reverse strand reads"* -> `Multiple datasets`
->            - Click on the *Folder* button at the right
->                - *Type to Search*: `right`
->                - Select the 6 `Trimmomatic on ..._left.fq.gz`
+>        - *"Left/Forward strand reads"* -> `R1_cleaned_reads`
+>        - *"Right/Reverse strand reads"* -> `R2_cleaned_reads`
 >        - *"Strand specific data"*: `Yes`
->    - *"Abundance estimation method"*: `Salmon`
+>    - *"Abundance estimation method"*: `RSEM`
+>    - *"Alignment method"*: `Bowtie2`
 >    - In *"Additional Options"*:
 >        - *"Trinity assembly?"*: `Yes`
 > 2. **Rename** the 6 `* isoforms counts` :(
->    - Check in the information panel (**i** icon) the lineage of your file (ex: `A1_left.fq.gz` ... )
->    - Rename the datasets: `A1_raw`, `A2_raw`, `A3_raw`, `B1_raw`, `B2_raw`, `B3_raw`.
+>    -  `A1_raw`, `A2_raw`, `A3_raw`, `B1_raw`, `B2_raw`, `B3_raw`.
+> 3. **Rename** output collection 
+>    -  `Align reads and estimate abundance on collection XX: isoforms counts` -> `idoforms_counts_raw`
 >
 >    > ### {% icon comment %} Comment
 >    >
@@ -528,8 +550,14 @@ assembly, or are low quality or aberrant reads.
 >    > 1. Click on one dataset
 >    > 2. Click on the little **i** icon
 >    > 3. Click on *Tool Standard Error:	stderr*
+>    > Example for sample B3 :
 >    > ```
->    > [2019-11-14 15:44:21.500] [jointLog] [info] Mapping rate = 44.4358%
+>    > 9038 reads; of these:
+>    > 9038 (100.00%) were paired; of these:
+>    > 5354 (59.24%) aligned concordantly 0 times
+>    > 3549 (39.27%) aligned concordantly exactly 1 time
+>    > 135 (1.49%) aligned concordantly >1 times
+>    > 40.76% overall alignment rate
 >    > ```
 >    {: .comment}
 >
@@ -538,6 +566,7 @@ assembly, or are low quality or aberrant reads.
 >    > At this stage, you can now delete some useless datasets
 >    > - `Trimmomatic on collection XX: unpaired`
 >    > - `Align reads and estimate abundance on *: genes counts`
+>    > - ...
 >    > Note that the dataset are just hidden. You can delete them permanently and make some room in the history options (the little wheel icon)
 >    {: .comment}
 >
@@ -561,8 +590,9 @@ assembly, or are low quality or aberrant reads.
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Build expression matrix** {% icon tool %} with the following parameters:
->    - *"Abundance estimates"*: `A1_raw`, `A2_raw`, `A3_raw`, `B1_raw`, `B2_raw`, `B3_raw`
->    - *"Abundance estimation method"*: `Salmon`
+>    - *"Abundance estimates"*: `isoforms_counts_raw`
+>    - *"Gene to transcript correspondance"*: `Gene_to_transcript_raw`
+>    - *"Abundance estimation method"*: `RSEM`
 >
 {: .hands_on}
 
@@ -572,7 +602,7 @@ assembly, or are low quality or aberrant reads.
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. `estimated RNA-Seq fragment isoform counts (raw counts)``
+> > 1. `estimated RNA-Seq fragment isoform counts (raw counts)`
 > > 2. `matrix of isoform TPM expression values (not cross-sample normalized)`
 > > 3. `matrix of TMM-normalized expression values`
 > >
@@ -591,19 +621,22 @@ In case of Ex90N50, values are computed as usual N50 but limited to the top most
 > 1. **Compute contig Ex90N50 statistic and Ex90 transcript count** {% icon tool %} with the following parameters:
 >    - *"Expression matrix"*: `Build expression matrix: matrix of TMM-normalized expression values`
 >    - *"Transcripts"*: `transcriptome_raw.fasta`
-> 2. Click on the visulization icon on the dataset `Compute contig Ex90N50 statistic and Ex90 transcript count: ExN50 statistics`
->    1. **Scatterplot - Creates a 2D-scatterplot from tabular datapoints**
->    2. *"X Column"*: select the Columns `1`
->    3. *"Y Column"*: select the Columns `2`
+>
 >
 {: .hands_on}
 
 **What we get**
-![ExN50_plot_toy_dataset](../../images/full-de-novo/ExN50_plot_toy_dataset.png)
+![N50_toy_dataset](../../images/full-de-novo/N50.PNG)
 
 **What we should get with a real dataset**
 ![ExN50_plot](../../images/full-de-novo/ExN50_plot.png)
 [(source)](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Transcriptome-Contig-Nx-and-ExN50-stats)
+
+
+> ### {% icon comment %} Other options 
+> Other tools have been developped such as [**DETONATE** (Li et al. 2014)](https://github.com/deweylab/detonate), [**TransRate** (Smith-Una et al. 2016)](https://hibberdlab.com/transrate/) or [**rnaQUAST** (Bushmanova et al. 2016)](https://github.com/ablab/rnaquast) to evaluate transcriptome assembly quality.
+> 
+{: .comment}
 
 ## Transcriptome annotation completeness
 
@@ -622,12 +655,22 @@ BUSCO (Benchmarking Universal Single-Copy Orthologs) allows a measure for quanti
 
 > ### {% icon question %} Questions
 >
-> 1. TODO
+> 1. What can you say about the transcritome completeness ?
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. TODO
-> >
+> > 1. You can click on the visualisation icon of the short summary :
+> > ```
+> > ***** Results: *****
+> > 	C:0.4%[S:0.4%,D:0.0%],F:2.4%,M:97.2%,n:255	   
+> > 	1	Complete BUSCOs (C)			   
+> > 	1	Complete and single-copy BUSCOs (S)	   
+> > 	0	Complete and duplicated BUSCOs (D)	   
+> > 	6	Fragmented BUSCOs (F)			   
+> > 	248	Missing BUSCOs (M)			   
+> > 	255	Total BUSCO groups searched		   
+> > ```
+> > With the toy dataset, 97.2% of expected genes are missing in the assembly.
 > {: .solution}
 >
 {: .question}
@@ -657,7 +700,7 @@ more of an art than a science, and again, simply not needed in most circumstance
 >    > 2. Click on the little **i** icon
 >    > 3. Click on *Tool Standard Error:	stderr*
 >    > ```
->    > 	Retained 2096 / 2102 = 99.71% of total transcripts.
+>    > 	Retained 1657 / 1663 = 99.64% of total transcripts.
 >    > ```
 >    {: .comment}
 >
@@ -679,7 +722,7 @@ more of an art than a science, and again, simply not needed in most circumstance
 {: .question}
 
 
-## Checking of the assembly statistics after cleaning
+<!--## Checking of the assembly statistics after cleaning
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -699,6 +742,7 @@ more of an art than a science, and again, simply not needed in most circumstance
 > {: .solution}
 >
 {: .question}
+-->
 
 # Annotation
 
@@ -710,6 +754,8 @@ To do so, we will first predict coding regions then perform similarity search on
 >
 > 1. **Generate gene to transcript map** {% icon tool %} with the following parameters:
 >    - *"Trinity assembly"*: `transcriptome_filtered.fasta`
+> 2. **Rename** output:
+>    - `Generate Gene to transcripts map on data XX` : `Gene_to_transcripts_map_filtered`
 >
 {: .hands_on}
 
@@ -721,40 +767,54 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 - a minimum length open reading frame (ORF) is found in a transcript sequence
 - a log-likelihood score similar to what is computed by the GeneID software is > 0.
 - the above coding score is greatest when the ORF is scored in the 1st reading frame as compared to scores in the other 5 reading frames.
-- if a candidate ORF is found fully encapsulated by the coordinates of another candidate ORF, the longer one is reported. However, a single transcript can report multiple ORFs (allowing for operons, chimeras, etc).
+- if a candidate ORF is found fully encapsulated by the coordinates of another candidate ORF, the longest one is reported. However, a single transcript can report multiple ORFs (allowing for operons, chimeras, etc).
 - optional the putative peptide has a match to a Pfam domain above the noise cutoff score.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **TransDecoder** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_filtered.fasta`
+>    - *"Minimum protein length"*: `100`
 >    - In *"Training Options"*:
 >        - *"Select the training method"*: `Train with the top longest ORFs`
 >
 {: .hands_on}
 
+> ### {% icon question %} Questions
+>
+> 1. What are the 4 generated files ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. gff3 : A file to describe the predicted features in the transcriptome (`gene`, `mRNA`, `exon`,`CDS`,`3'UTR`,`5'UTR`)   
+> > bed : feature coordinates file  
+> > cds : sequence file, containing CDS (Coding DNA Sequences)  
+> > pep : the most important file, which contains the protein sequences corresponding to the predicted coding regions within the transcripts.  
+> > 
+> {: .solution}
+>
+{: .question}
 ## Similarity search
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
-> 1. **Diamond** {% icon tool %} with the following parameters:
->    - *"What do you want to align?"*: `Align amino acid query sequences (blastp)`
->    - *"Input query file in FASTA or FASTQ format"*: `TransDecoder on data XXX: pep`
->    - *"Select a reference database"*: `Uniprot Swissprot`
->    - *"Format of output file"*: `BLAST Tabular`
->    - In *"Method to restrict the number of hits?"*: `Maximum number of target sequences`
->        - *"The maximum number of target sequence per query to report alignments for"*: `1`
-> 3. **Rename** the Diamond output
->    - `Diamond on data XXX` -> `Diamond (blastp)`
-> 2. **Diamond** {% icon tool %} with the following parameters:
->    - *"What do you want to align?"*: `Align DNA query sequences (blastx)`
->    - *"Input query file in FASTA or FASTQ format"*: `transcriptome_filtered.fasta`
->    - *"Select a reference database"*: `Uniprot Swissprot`
->    - *"Format of output file"*: `BLAST Tabular`
->    - In *"Method to restrict the number of hits?"*: `Maximum number of target sequences`
->        - *"The maximum number of target sequence per query to report alignments for"*: `1`
-> 4. **Rename** the Diamond output
->    - `Diamond on data XXX` -> `Diamond (blastx)`
+> 1. **NCBI BLAST+ blastp** {% icon tool %} with the following parameters:
+>    - *"Protein query sequence(s)"*: `TransDecoder on data XXX: pep`
+>    - *"Subject database/sequences"*: `Locally installed general BLAST database`
+>    - *"Protein BLAST database"*: `UniprotKB/Swissprot`
+>    - *"Type of BLAST"*: `Traditional BLASTP`
+>    - *"Set expectation value cutoff"*: `0.0001`
+> 2. **NCBI BLAST+ blastx** {% icon tool %} with the following parameters:
+>    - *"Nucleotide query sequence(s)"*: `transcriptome_filtered.fasta`
+>    - *"Subject database/sequences"*: `Locally installed general BLAST database`
+>    - *"Protein BLAST database"*: `UniprotKB/Swissprot`
+>    - *"Query genetic code"*: `Standard`
+>    - *"Type of BLAST"*: `Traditional BLASTX`
+>    - *"Set expectation value cutoff"*: `0.001`
+> 3. **Rename** the BLASTP output
+>    - `blastp on data XXX` -> `blastp`
+> 4. **Rename** the BLASTX output
+>    - `blastx on data XXX` -> `blastx`
 >
 >    > ### {% icon comment %} Comment
 >    >
@@ -763,6 +823,7 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >
 {: .hands_on}
 
+<!--
 ## Find signal peptides
 
 > ### {% icon hands_on %} Hands-on: Task description
@@ -771,7 +832,7 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >    - *"Fasta file of protein sequences"*: `TransDecoder on data XXX: pep`
 >
 {: .hands_on}
-
+-->
 ## Find transmembrane domains
 
 > ### {% icon hands_on %} Hands-on: Task description
@@ -797,9 +858,9 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 > 1. **Trinotate** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_filtered.fasta`
 >    - *"Peptides"*: `TransDecoder on data XXX: pep`
->    - *"Genes to transcripts map"*: `Generate gene to transcript map on data XXX: Genes to transcripts map`
->    - *"BLASTP: Peptides vs Uniprot.SwissProt"*: `Diamond (blastp)`
->    - *"BLASTX: Transcripts vs Uniprot.SwissProt"*: `Diamond (blastx)`
+>    - *"Genes to transcripts map"*: `Gene_to_transcripts_map_filtered`
+>    - *"BLASTP: Peptides vs Uniprot.SwissProt"*: `blastp`
+>    - *"BLASTX: Transcripts vs Uniprot.SwissProt"*: `blastx`
 >    - *"HMMER hmmscan: Peptides vs PFAM"*: `Table of per-domain hits from HMM matches of TransDecoder on data XXX: pep against the profile database`
 >    - *"TMHMM on Peptides"*: `TMHMM results`
 >    - *"SignalP on Peptides"*: `SignalP euk results`
