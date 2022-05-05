@@ -284,9 +284,9 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 
 > ### {% icon question %} Questions
 > 
-> 1. For sample A3 :
+> 1. For sample A3 :  
 > 1.1. What is the mapping rate ? What does it means ?   
-> 2. For sample A1 :
+> 2. For sample A1 :  
 > 2.1. What is mapping rate ?  
 > 2.2. Which file should you continue the analysis with ?   
 >
@@ -299,7 +299,7 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 > > No rRNA was detected in the sample.   
 > > 2.1.    
 > > ```
-> > 0.01% overall alignment rate
+> > 0.01% overall alignment rate  
 > > ```   
 > > 2.2. We should discard all read mapping to rRNA sequences and continue the analysis with **unmapped** reads.
 > >
@@ -416,11 +416,13 @@ To get to the transcripts information, we need to reconstruct all full-length tr
 > 
 {: .comment}
 
-We will use *Trinity*, a *de novo* transcriptome assembler for short sequencing reads. 
-*Trinity* is the most widely used *de novo* transcriptome assembler and is in continuous development since several years.
-All information about Trinity assembler are here : [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
 
 ## Assembly with **Trinity**
+
+We will use *Trinity*, a *de novo* transcriptome assembler for short sequencing reads.   
+*Trinity* is the most widely used *de novo* transcriptome assembler and is in continuous development since several years. 
+All information about Trinity assembler are here : [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
+![trinity](../../images/full-de-novo/trinity.jpeg)
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -517,20 +519,21 @@ The *de novo* transcriptome assembly needs to be evaluated before any further do
 
 Remapping reads back to assembly aims to examine the RNA-Seq read representation of the assembly.
 
-Several methods available for estimating transcript abundance and these include alignment-based methods 
+Several methods are available for estimating transcript abundance, including alignment-based methods 
 (aligning reads to the transcript assembly) and alignment-free methods 
 (examining k-mer abundances in the reads and in the resulting assembly).
-Alignment-free method such as Kallisto and Salmon are way more faster than alignment-based quantification methods.
+Alignment-free methods such as Kallisto and Salmon are way more faster than alignment-based quantification methods.
 In return, they cannot provide alignment files (BAM), only a coverage table.
 
-Ideally, at least ~80% of your input RNA-Seq reads are represented by your transcriptome assembly.
+Ideally, at least ~80% of input RNA-Seq reads are represented by the transcriptome assembly.
 The remaining unassembled reads likely corresponds to lowly expressed transcripts with insufficient coverage to enable 
-assembly, or are low quality or aberrant reads.
+assembly, to low quality or aberrant reads.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Align reads and estimate abundance** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_raw.fasta`
+>    - *"Gene to Transcripts map"*: `Gene_to_transcripts_map_raw`
 >    - *"Paired or Single-end data?"*: `Paired`
 >        - *"Left/Forward strand reads"* -> `R1_cleaned_reads`
 >        - *"Right/Reverse strand reads"* -> `R2_cleaned_reads`
@@ -550,14 +553,14 @@ assembly, or are low quality or aberrant reads.
 >    > 1. Click on one dataset
 >    > 2. Click on the little **i** icon
 >    > 3. Click on *Tool Standard Error:	stderr*
->    > Example for sample B3 :
+>    > Example for sample A1 :   
 >    > ```
->    > 9038 reads; of these:
->    > 9038 (100.00%) were paired; of these:
->    > 5354 (59.24%) aligned concordantly 0 times
->    > 3549 (39.27%) aligned concordantly exactly 1 time
->    > 135 (1.49%) aligned concordantly >1 times
->    > 40.76% overall alignment rate
+>    > 8803 reads; of these:
+>    >   8803 (100.00%) were paired; of these:
+>    >     4012 (45.58%) aligned concordantly 0 times
+>    >     4640 (52.71%) aligned concordantly exactly 1 time
+>    >     151 (1.72%) aligned concordantly >1 times
+>    > 54.42% overall alignment rate
 >    > ```
 >    {: .comment}
 >
@@ -572,18 +575,6 @@ assembly, or are low quality or aberrant reads.
 >
 >
 {: .hands_on}
-
-> ### {% icon question %} Questions
->
-> 1. TODO
->
-> > ### {% icon solution %} Solution
-> >
-> > 1. TODO
-> >
-> {: .solution}
->
-{: .question}
 
 ## Merge the mapping tables and compute normalizations
 
@@ -640,7 +631,7 @@ In case of Ex90N50, values are computed as usual N50 but limited to the top most
 
 ## Transcriptome annotation completeness
 
-BUSCO (Benchmarking Universal Single-Copy Orthologs) allows a measure for quantitative assessment of genome/transcriptome/proteome based on evolutionarily informed expectations of gene content. Details for this tool are here: [BUSCO](https://busco.ezlab.org/)
+[BUSCO (Benchmarking Universal Single-Copy Orthologs)](https://busco.ezlab.org/) allows a measure for quantitative assessment of genome/transcriptome/proteome based on evolutionarily informed expectations of gene content. 
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -652,14 +643,13 @@ BUSCO (Benchmarking Universal Single-Copy Orthologs) allows a measure for quanti
 {: .hands_on}
 
 
-
 > ### {% icon question %} Questions
 >
-> 1. What can you say about the transcritome completeness ?
+>  What can you say about the transcritome completeness ?
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. You can click on the visualisation icon of the short summary :
+> >  You can click on the visualisation icon of the short summary :
 > > ```
 > > ***** Results: *****
 > > 	C:0.4%[S:0.4%,D:0.0%],F:2.4%,M:97.2%,n:255	   
@@ -705,21 +695,10 @@ more of an art than a science, and again, simply not needed in most circumstance
 >    {: .comment}
 >
 > 2. **Rename** the output
->    - `Filter low expression transcripts on data 42 and data 14: filtered low expression transcripts` -> `transcriptome_filtered.fasta`
+>    - `Filter low expression transcripts on data XX: filtered low expression transcripts` -> `transcriptome_filtered.fasta`
 >
 {: .hands_on}
 
-> ### {% icon question %} Questions
->
-> 1. TODO
->
-> > ### {% icon solution %} Solution
-> >
-> > 1. TODO
-> >
-> {: .solution}
->
-{: .question}
 
 
 <!--## Checking of the assembly statistics after cleaning
@@ -747,9 +726,11 @@ more of an art than a science, and again, simply not needed in most circumstance
 # Annotation
 
 To get a robust transcriptome annotation, it is important to annotate the assembled transcripts and derived putative proteins as well.  
-To do so, we will first predict coding regions then perform similarity search on UniprotKB/SwissProt. Then, we can seach for signal peptides, transmembrane domains and profiles to refine the annotation. Finally, the results from previous steps can be summarized using Trinotate.  
+To do so, we will first predict coding regions then perform similarity search on UniprotKB/SwissProt. Then, we can search more precisely for transmembrane domains and protein profiles to refine the annotation. Finally, the results from previous steps can be summarized using Trinotate.  
 
 ## Generate gene to transcript map
+
+We first need to generate a gene to transcripts map for the filtered transcriptome.
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Generate gene to transcript map** {% icon tool %} with the following parameters:
@@ -764,11 +745,11 @@ To do so, we will first predict coding regions then perform similarity search on
 [TransDecoder](https://github.com/TransDecoder/TransDecoder/releases) identifies candidate coding regions within transcript sequences generated by Trinity. TransDecoder identifies candidate protein-coding regions based on nucleotide composition, open reading frame (ORF) length, and (optional) Pfam domain content.
 
 TransDecoder identifies likely coding sequences based on the following criteria:
-- a minimum length open reading frame (ORF) is found in a transcript sequence
+- an open reading frame (ORF) is found in a transcript sequence with length greater than threshold (usually 100)
 - a log-likelihood score similar to what is computed by the GeneID software is > 0.
 - the above coding score is greatest when the ORF is scored in the 1st reading frame as compared to scores in the other 5 reading frames.
 - if a candidate ORF is found fully encapsulated by the coordinates of another candidate ORF, the longest one is reported. However, a single transcript can report multiple ORFs (allowing for operons, chimeras, etc).
-- optional the putative peptide has a match to a Pfam domain above the noise cutoff score.
+- optional : the putative peptide has a match to a Pfam domain above the noise cutoff score.
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -782,19 +763,30 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 
 > ### {% icon question %} Questions
 >
-> 1. What are the 4 generated files ?
+> What are the 4 generated files ?
 >
 > > ### {% icon solution %} Solution
 > >
-> > 1. gff3 : A file to describe the predicted features in the transcriptome (`gene`, `mRNA`, `exon`,`CDS`,`3'UTR`,`5'UTR`)   
-> > bed : feature coordinates file  
-> > cds : sequence file, containing CDS (Coding DNA Sequences)  
-> > pep : the most important file, which contains the protein sequences corresponding to the predicted coding regions within the transcripts.  
+> > **gff3** : a file to describe the predicted features in the transcriptome (`gene`, `mRNA`, `exon`,`CDS`,`3'UTR`,`5'UTR`)   
+> > **bed** : feature coordinates file  
+> > **cds** : sequence file, containing CDS (Coding DNA Sequences)  
+> > **pep** : the most important file, which contains the protein sequences corresponding to the predicted coding regions within the transcripts.  
 > > 
 > {: .solution}
 >
 {: .question}
-## Similarity search
+
+## Similarity search with **BLAST**
+
+![BLAST_logo](../../images/full-de-novo/blast_logo.PNG)
+
+[**The Basic Local Alignment Search Tool (BLAST)**](https://blast.ncbi.nlm.nih.gov/Blast.cgi) finds regions of similarity between sequences. The program compares nucleotide or protein sequences and calculates the statistical significance of matches. BLAST can be used to infer functional and evolutionary relationships between sequences as well as help identify members of gene families.  
+  
+There are several types of BLAST searches, including:  
+    - **BLASTp** (Protein BLAST): compares one or more protein query sequences to a subject protein sequence or a database of protein sequences. This is useful when trying to identify a protein.  
+    - **BLASTx** (translated nucleotide sequence searched against protein sequences): compares a nucleotide query sequence that is translated in six reading frames (resulting in six protein sequences) against a database of protein sequences. Because blastx translates the query sequence in all six reading frames and provides combined significance statistics for hits to different frames, it is particularly useful when the reading frame of the query sequence is unknown or it contains errors that may lead to frame shifts or other coding errors. Thus blastx is often the first analysis performed with a newly determined nucleotide sequence. [Learn more about BLAST](https://guides.lib.berkeley.edu/ncbi/blast)  
+    
+Here, we will use **BLASTp** to search for similarities between the `.pep` protein sequences produces by TransDecoder and the proteins reported in the highly curated database [UniProtKB/SwissProt](https://www.uniprot.org/help/uniprotkb) (one record per gene in one species). Then we will use **BLASTx** to search for similarities between the filtered transcriptome nucleotide and [UniProtKB/SwissProt](https://www.uniprot.org/help/uniprotkb).  
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -803,7 +795,7 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >    - *"Subject database/sequences"*: `Locally installed general BLAST database`
 >    - *"Protein BLAST database"*: `UniprotKB/Swissprot`
 >    - *"Type of BLAST"*: `Traditional BLASTP`
->    - *"Set expectation value cutoff"*: `0.0001`
+>    - *"Set expectation value cutoff"*: `0.001`
 > 2. **NCBI BLAST+ blastx** {% icon tool %} with the following parameters:
 >    - *"Nucleotide query sequence(s)"*: `transcriptome_filtered.fasta`
 >    - *"Subject database/sequences"*: `Locally installed general BLAST database`
@@ -816,13 +808,20 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 > 4. **Rename** the BLASTX output
 >    - `blastx on data XXX` -> `blastx`
 >
->    > ### {% icon comment %} Comment
->    >
->    > Note that you can both use **Diamond** {% icon tool %} or the **NCBI BLAST+ blastp** {% icon tool %} and **NCBI BLAST+ blast** {% icon tool %}
->    {: .comment}
->
 {: .hands_on}
 
+> ### {% icon question %} Questions
+>
+> What are the different columns in the resulting tab ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > ![BLAST_col1](../../images/full-de-novo/blast_columns_desc.PNG) 
+> > ![BLAST_col2](../../images/full-de-novo/blast_columns_desc2.PNG) 
+> > 
+> {: .solution}
+>
+{: .question}
 <!--
 ## Find signal peptides
 
@@ -833,7 +832,10 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >
 {: .hands_on}
 -->
-## Find transmembrane domains
+
+## Find transmembrane domains with **TMHMM**
+
+[**TMHMM** (Krogh et al, 2001)](https://services.healthtech.dtu.dk/service.php?TMHMM-2.0) predicts transmembrane helices from single sequence based on a hidden Markov model. The prediction gives the most probable location and orientation of transmembrane helices in the sequence. It is found by an algorithm called N-best (or 1-best in this case) that sums over all paths through the model with the same location and direction of the helices. 
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -842,16 +844,55 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >
 {: .hands_on}
 
-## Search again profile database
+> ### {% icon question %} Questions
+>
+> 1. What are the different columns in the resulting tab ?
+> 2. What does a Topology of `i` and `o` mean ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1. Each line starts with the sequence identifier and then these fields:  
+> >    - `len`: the length of the protein sequence.  
+> >    - `ExpAA`: The expected number of amino acids intransmembrane helices (see above).  
+> >    - `First60`: The expected number of amino acids in transmembrane helices in the first 60 amino acids of the protein (see above).  
+> >    - `PredHel`: The number of predicted transmembrane helices by N-best.  
+> >    - `Topology` : The topology predicted by N-best.  
+> > For example :  
+> >    `TRINITY_DN104_c0_g1::TRINITY_DN104_c0_g1_i1::g.114::m.114	110	39.10	17.86	2	i43-60o65-87i`  
+> > -> The topology is given as the position of the transmembrane helices separated by 'i' if the loop is on the inside or 'o' if it is on the outside. The above example 'i43-60o65-87i' means that it starts on the inside, has a predicted TMH at position 43 to 60, the outside, then a TMH at position 64-87 etc.  
+> > 2. If the whole sequence is labeled as inside (i) or outside (o), the prediction is that it contains no membrane helices.  
+> > 
+> {: .solution}
+>
+{: .question}
+
+## Search again profile database with **HMMscan** (HMMER)
+
+[**HMMER (Finn et al, 2015)**](https://hmmer-web-docs.readthedocs.io/en/latest/about.html) is used to search sequence databases for sequence homologs, and to make sequence alignments. It implements methods using probabilistic models called profile hidden Markov models(profile HMMs).  
+
+Here, we will use HMMscan to search homologs of the predicted coding regions in the transcripts (`.pep` file from TransDecoder) in [**Pfam**](https://pfam.xfam.org/) database.  
+
+The Pfam database is a large collection of protein families, each represented by multiple sequence alignments and hidden Markov models (HMMs). 
+Proteins are generally composed of one or more functional regions, commonly termed domains. Different combinations of domains give rise to the diverse range of proteins found in nature. The identification of domains that occur within proteins can therefore provide insights into their function.
+Pfam also generates higher-level groupings of related entries, known as clans. A clan is a collection of Pfam entries which are related by similarity of sequence, structure or profile-HMM.
+The data presented for each entry is based on the UniProt Reference Proteomes but information on individual UniProtKB sequences can still be found by entering the protein accession. Pfam full alignments are available from searching a variety of databases, either to provide different accessions (e.g. all UniProt and NCBI GI) or different levels of redundancy. 
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **hmmscan** {% icon tool %} with the following parameters:
+>    - *"Use a built-in HMM model database"*
+>    - *"Select a HMM model database"*: `Pfam-A`
 >    - *"Sequence file"*: `TransDecoder on data XXX: pep`
+>    - *Other options*: default
 >
 {: .hands_on}
 
 ## Transcriptome annotation using **Trinotate**
+
+![Trinotate_scheme](../../images/full-de-novo/trinotate_scheme.PNG)
+
+[**Trinotate**](https://github.com/Trinotate/Trinotate.github.io/blob/master/index.asciidoc) is a comprehensive annotation suite designed for automatic functional annotation of transcriptomes, particularly de novo assembled transcriptomes, from model or non-model organisms. Trinotate makes use of a number of different well referenced methods for functional annotation including homology search to known sequence data (BLAST+/SwissProt), protein domain identification (HMMER/PFAM), protein signal peptide and transmembrane domain prediction (signalP/tmHMM), and leveraging various annotation databases (eggNOG/GO/Kegg databases). All functional annotation data derived from the analysis of transcripts is integrated into a SQLite database which allows fast efficient searching for terms with specific qualities related to a desired scientific hypothesis or a means to create a whole annotation report for a transcriptome.
+
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -861,12 +902,25 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >    - *"Genes to transcripts map"*: `Gene_to_transcripts_map_filtered`
 >    - *"BLASTP: Peptides vs Uniprot.SwissProt"*: `blastp`
 >    - *"BLASTX: Transcripts vs Uniprot.SwissProt"*: `blastx`
->    - *"HMMER hmmscan: Peptides vs PFAM"*: `Table of per-domain hits from HMM matches of TransDecoder on data XXX: pep against the profile database`
+>    - *"HMMER hmmscan: Peptides vs PFAM"*: `HMMSCAN on data XX: per_domain hits from HMM matches`
 >    - *"TMHMM on Peptides"*: `TMHMM results`
->    - *"SignalP on Peptides"*: `SignalP euk results`
 >    - *"Let Galaxy downloading the Trinotate Pre-generated Resource SQLite database"*: `Yes`
 >
 {: .hands_on}
+
+> ### {% icon question %} Questions
+>
+> What are the different columns in the resulting tab ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > ![Trinotate_scheme](../../images/full-de-novo/trinotate_columns.PNG)
+> > 
+> {: .solution}
+>
+{: .question}
+
+
 
 # Differential Expression (DE) Analysis
 
@@ -876,22 +930,20 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >
 > 1. **Align reads and estimate abundance** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_filtered.fasta`
+>    - *"Gene to Transcripts map"*: `Gene_to_transcripts_map_filtered`
 >    - *"Paired or Single-end data?"*: `Paired`
->        - *"Left/Forward strand reads"* -> `Multiple datasets`
->            - Click on the *Folder* button at the right
->                - *Type to Search*: `left`
->                - Select the 6 `Trimmomatic on ..._left.fq.gz`
->        - *"Right/Reverse strand reads"* -> `Multiple datasets`
->            - Click on the *Folder* button at the right
->                - *Type to Search*: `right`
->                - Select the 6 `Trimmomatic on ..._left.fq.gz`
+>        - *"Left/Forward strand reads"* -> `R1_cleaned_reads`
+>        - *"Right/Reverse strand reads"* -> `R2_cleaned_reads`
 >        - *"Strand specific data"*: `Yes`
->    - *"Abundance estimation method"*: `Salmon`
+>    - *"Abundance estimation method"*: `RSEM`
+>    - *"Alignment method"*: `Bowtie2`
 >    - In *"Additional Options"*:
 >        - *"Trinity assembly?"*: `Yes`
 > 2. **Rename** the 6 `* isoforms counts` :(
->    - Check in the information panel (**i** icon) the lineage of your file (ex: `A1_left.fq.gz` ... )
->    - Rename the datasets: `A1`, `A2`, `A3`, `B1`, `B2`, `B3`.
+>    -  `A1`, `A2`, `A3`, `B1`, `B2`, `B3`.
+> 3. **Rename** output collection 
+>    -  `Align reads and estimate abundance on collection XX: isoforms counts` -> `idoforms_counts_filtered`
+>
 >
 >    > ### {% icon comment %} Comment
 >    >
@@ -899,19 +951,32 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >    > 1. Click on one dataset
 >    > 2. Click on the little **i** icon
 >    > 3. Click on *Tool Standard Error:	stderr*
+>    > Example for sample A1 :   
 >    > ```
->    > [2019-11-14 15:44:21.500] [jointLog] [info] Mapping rate = 44.4358%
+>    > 8803 reads; of these:
+>    >   8803 (100.00%) were paired; of these:
+>    >     4012 (45.58%) aligned concordantly 0 times
+>    >     4640 (52.71%) aligned concordantly exactly 1 time
+>    >     151 (1.72%) aligned concordantly >1 times
+>    > 54.42% overall alignment rate
 >    > ```
 >    {: .comment}
->
->    > ### {% icon comment %} Comment
 >    >
->    > At this stage, you can now delete some useless datasets
->    > - `Align reads and estimate abundance on *: genes counts`
->    > Note that the dataset are just hidden. You can delete them permanently and make some room in the history options (the little wheel icon)
->    {: .comment}
 >
 {: .hands_on}
+> ### {% icon question %} Questions
+>
+> Do you expect the mapping rate on filtered transcriptome to be better than the mapping rate on raw transcriptome ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > The low expressed transcripts were discarded so it should not impact much the mapping rate. However on large dataset, the mapping should be faster.
+> > 
+> {: .solution}
+>
+{: .question}
+
+
 
 ## Merge the mapping tables and compute a TMM normalization
 
@@ -921,20 +986,22 @@ After matrix creation, we will create a design sample file that will describe th
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Build expression matrix** {% icon tool %} with the following parameters:
->    - *"Abundance estimates"*: `A1`, `A2`, `A3`, `B1`, `B2`, `B3`
->    - *"Abundance estimation method"*: `Salmon`
-> 2. **Describe samples and replicates**  {% icon tool %} with the following parameters:
+>    - *"Abundance estimates"*: `isoforms_counts_filtered`
+>    - *"Gene to transcript correspondance"*: `Gene_to _transcripts_map_filtered`
+>    - *"Abundance estimation method"*: `RSEM`
+>    - *"Cross sample normalization"*: `TMM`
+> 2. **Describe samples**  {% icon tool %} with the following parameters:
 >    - *"Samples"*
 >        - *"1: Samples"*:
 >            - *"Full sample name"*: `A1`
->            - *"Condition"*: `A`
+>            - *"Condition"*: `Force-feeding`
 >        - *"2: Samples"*:
 >            - *"Full sample name"*: `A2`
->            - *"Condition"*: `A`
+>            - *"Condition"*: `Force-feeding`
 >        - ...:
 >        - *"6: Samples"*:
 >            - *"Full sample name"*: `B3`
->            - *"Condition"*: `B`
+>            - *"Condition"*: `Control`
 >
 {: .hands_on}
 
@@ -949,7 +1016,7 @@ proceeding to subsequent data analyses (such as differential expression).
 
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **RNASeq samples quality check** {% icon tool %} with the following parameters:
->    - *"Expression matrix"*: `Build expression matrix: estimated RNA-Seq fragment isoform counts (raw counts)`
+>    - *"Expression matrix"*: `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)`
 >    - *"Samples description"*: `Describe samples`
 >
 {: .hands_on}
