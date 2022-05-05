@@ -5,19 +5,22 @@ enable: false
 title: De novo transcriptome assembly, annotation, and differential expression analysis
 zenodo_link: 'https://zenodo.org/record/3541678'
 questions:
-- Which biological questions are addressed by the tutorial?
-- Which bioinformatics techniques are important to know for this type of data?
+- How to pre-process raw RNA-seq reads to perform *de novo* assemby ?
+- What are the steps to assemble a transcriptome *de novo* from RNA-seq reads ?
+- What are the steps to annotate a transcriptome *de novo* ?
+- How to use the transcriptome *de novo* as a reference for the identification of differentially expressed genes ?
 objectives:
-- The learning objectives are the goals of the tutorial
-- They will be informed by your audience and will communicate to them and to yourself
-  what you should focus on during the course
-- They are single sentences describing what a learner should be able to do once they
-  have completed the tutorial
-- You can use Bloom's Taxonomy to write effective learning objectives
-time_estimation: 3H
+- Check RNA-seq dataset quality 
+- Pre-process and perform trimming on raw data, then check quality of trimmed data
+- Use Trinity to generate a raw transcriptome *de novo*
+- Use Trinity suite and Busco to assess the assembly quality
+- Filter raw transcriptome
+- Use Trinotate to annotate the transcriptome
+- Use DESeq2 to perform differential analysis
+time_estimation: 16H
 key_points:
-- The take-home messages
-- They will appear at the end of the tutorial
+- The generation of a transcriptome *de novo* from RNA-seq reads requires many steps to ensure its quality and accuracy
+- *De novo* transcriptome assembly is a accessible method to study non-model organisms
 contributors:
 - abretaud
 - lecorguille
@@ -422,7 +425,7 @@ To get to the transcripts information, we need to reconstruct all full-length tr
 We will use *Trinity*, a *de novo* transcriptome assembler for short sequencing reads.   
 *Trinity* is the most widely used *de novo* transcriptome assembler and is in continuous development since several years. 
 All information about Trinity assembler are here : [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
-![trinity](../../images/full-de-novo/trinity.jpeg)
+![trinity](../../images/full-de-novo/trinity_algo.PNG)
 
 > ### {% icon hands_on %} Hands-on: Task description
 >
@@ -920,7 +923,23 @@ The data presented for each entry is based on the UniProt Reference Proteomes bu
 >
 {: .question}
 
+> ### {% icon comment %} Other options 
+> To get more functional annotations, we can also use [**SignalP (Nielsen et al, 2017)](https://services.healthtech.dtu.dk/service.php?SignalP) to predict the presence of signal peptides and the location of their cleavage sites in protein. There are also some alternatives to Trinotate to annotate a transcriptome, such as [Blast2Go](https://www.blast2go.com/), [**FunctionAnnotator (Chen et al 2017)**](https://www.nature.com/articles/s41598-017-10952-4)...
+> 
+{: .comment}
 
+## Generate Super Transcripts
+
+This analysis perform aligments of all the different isoforms per gene. This result gives an overview of gene complexity within the transcriptome.
+
+![SuperTranscript](../../images/full-de-novo/super-transcript.PNG)
+
+> ### {% icon hands_on %} Hands-on: Task description
+>
+> 1. **Generate SuperTranscripts** {% icon tool %} with the following parameters:
+>    - *"Trinity assembly"* : `transcriptome_filtered_fasta`
+>
+{: .hands_on}
 
 # Differential Expression (DE) Analysis
 
@@ -998,10 +1017,12 @@ After matrix creation, we will create a design sample file that will describe th
 >        - *"2: Samples"*:
 >            - *"Full sample name"*: `A2`
 >            - *"Condition"*: `Force-feeding`
->        - ...:
+>        - ...
 >        - *"6: Samples"*:
 >            - *"Full sample name"*: `B3`
->            - *"Condition"*: `Control`
+>            - *"Condition"*: `Control`  
+>
+> ![desc_samples](../../images/full-de-novo/desc_samples.PNG)
 >
 {: .hands_on}
 
@@ -1021,12 +1042,12 @@ proceeding to subsequent data analyses (such as differential expression).
 >
 {: .hands_on}
 
-**RNASeq samples quality check** generated 4 outputs:
+**RNASeq samples quality check** generated 4 outputs (PDF) :
 
-- **Pairwise comparisons of replicate** log(CPM) values. Data points more than 2-fold different are highlighted in red.
-- **Pairwise MA plots** (x-axis: mean log(CPM), y-axis log(fold_change)).
-- **Replicate Pearson correlation heatmap**. The heatmap gives an overview of similarities and dissimilarities between samples: the color represents the distance between the samples.
-- **Principal Component Analysis (PCA)**. It shows the samples in the 2D plane spanned by their first two principal components. Each replicate is plotted as an individual data point. This type of plot is useful for visualizing the overall effect of experimental covariates and batch effects.
+- **Pairwise comparisons and MA plots of control (B) replicates** :`Control.rep_compare.pdf`. Data points more than 2-fold different are highlighted in red (log(CPM) values (for pairwise comparison : x-axis: mean log(CPM), for MA plots : y-axis log(fold_change)).
+- **Pairwise comparisons and MA plots of force-feeding (A) replicates** :`Force-feeding.rep_compare.pdf`. Data points more than 2-fold different are highlighted in red (log(CPM) values (for pairwise comparison : x-axis: mean log(CPM), for MA plots : y-axis log(fold_change)). 
+- **Replicate Pearson correlation heatmap** : `input.matric.CPM.log2.sample_cor_matrix.pdf` The heatmap gives an overview of similarities and dissimilarities between samples: the color represents the distance between the samples.
+- **Principal Component Analysis (PCA)** : `input.matric.CPM.log2.prcomp.principal_componenents.pdf`.  It shows the samples in the 2D plane spanned by their first two principal components. Each replicate is plotted as an individual data point. This type of plot is useful for visualizing the overall effect of experimental covariates and batch effects.
 
 ![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
 
@@ -1048,13 +1069,36 @@ It is possible to have different numbers of replicates per condition.
 
 > ### {% icon hands_on %} Hands-on: Task description
 > 1. **Differential expression analysis** {% icon tool %} with the following parameters:
->    - *"Expression matrix"*: `Build expression matrix: estimated RNA-Seq fragment isoform counts (raw counts)`
+>    - *"Expression matrix"*: `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)`
 >    - *"Sample description"*: `Describe samples` (the last one)
 >    - *"Differential analysis method"*: `DESeq2`
 >
 {: .hands_on}
 
-The output from running the DE analysis containing files for each of the pairwise comparisons performed and the corresponding MA and volcano plot.
+**Differential expression analysis** generated 3 outputs (PDF) :
+- **Differential expression Data table** : `Differential expression results on data XX` ; `input.matrix.Control_vs_Force-feeding.DESeq2`. For each gene, the statistics of diffferential expression testing are reported. We will focus on `log2FoldChange` and `padj`.
+- **MA and volcano plots** : `Differential expression plots on data XX` ; `input.matrix.Control_vs_Force-feeding.DESeq2.DE_results.MA_n_Volcano`. Volcano plots are commonly used to display the results of RNA-seq or other omics experiments. A volcano plot is a type of scatterplot that shows statistical significance (P value) versus magnitude of change (fold change). It enables quick visual identification of genes with large fold changes that are also statistically significant. These may be the most biologically significant genes. In a volcano plot, the most upregulated genes are towards the right, the most downregulated genes are towards the left, and the most statistically significant genes are towards the top. MA plots represents log intensity ratio (M) versus mean log intensities (A).
+- **Counts matrices** : `Count matrices generated for differential expression on data XX` ; `input.matrix.Control_vs_Force-feeding.DESeq2`
+
+> ### {% icon question %} Questions
+>
+> 1. What are the different columns in the DE data table ?
+> 2. What can you say about the DE analysis results ?
+>
+> > ### {% icon solution %} Solution
+> >
+> > 1.  
+> > - `baseMean` : The average of the normalized count values, dividing by size factors, taken over all samples.  
+> > - `log2FoldChange` : The effect size estimate. This value indicates how much the gene or transcript's expression seems to have changed between the comparison and control groups. This value is reported on a logarithmic scale to base 2.  
+> > - `lfcSE` : The standard error estimate for the log2 fold change estimate.  
+> > - `stat`: The value of the test statistic for the gene or transcript.  
+> > - `pvalue` : P-value of the test for the gene or transcript.  
+> > - `padj` : Adjusted P-value for multiple testing for the gene or transcript.	  
+> > 
+> {: .solution}
+>
+{: .question}
+
 
 ## Extract and cluster differentially expressed transcripts
 
@@ -1066,9 +1110,9 @@ patterns of differential expression across the samples.
 >
 > 1. **Extract and cluster differentially expressed transcripts** {% icon tool %} with the following parameters:
 >    - In *"Additional Options"*:
->        - *"Expression matrix"*: `Build expression matrix: estimated RNA-Seq fragment isoform counts (raw counts)`
+>        - *"Expression matrix"*: `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)`
 >        - *"Sample description"*: `Describe samples`
->        - *"Differential expression results"*: `Differential expression results on data XXX and data XXX`
+>        - *"Differential expression results"*: `Differential expression results on data XXX
 >        - *"p-value cutoff for FDR"*: `1`
 >        - *"Run GO enrichment analysis"*: `No`
 >
@@ -1082,10 +1126,10 @@ patterns of differential expression across the samples.
 
 All genes that have P-values at most 1e-3 and are at least 2^2 fold differentially expressed are extracted for each of the earlier pairwise DE comparisons.
 Different kinds of summary files and plots are generated:
-- Sample correlation matrix heatmap
-- DE gene vs. samples heatmap
+- **Sample correlation matrix heatmap**
+- **DE gene vs. samples heatmap**
 
-To more seriously study and define your gene clusters, you will need to interact with the data as described below.
+To study more seriously and define your gene clusters, you will need to interact with the data as described below.
 The clusters and all required data for interrogating and defining clusters is all saved with an R-session, 
 locally with the file 'all.RData'.
 
@@ -1103,7 +1147,7 @@ There are three different methods for partitioning genes into clusters:
 > ### {% icon hands_on %} Hands-on: Task description
 >
 > 1. **Partition genes into expression clusters** {% icon tool %} with the following parameters:
->    - *"RData file"*: `Extract and cluster differentially expressed transcripts: RData file`
+>    - *"RData file"*: `Extract and cluster differentially expressed transcripts on data XX: RData file`
 >    - *"Method for partitioning genes into clusters"*: `Cut tree based on x percent of max(height) of tree`
 >
 {: .hands_on}
