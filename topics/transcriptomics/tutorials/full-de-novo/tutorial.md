@@ -1,34 +1,32 @@
 ---
 layout: tutorial_hands_on
-enable: false
 
-title: De novo transcriptome assembly, annotation, and differential expression analysis
+title: "De novo transcriptome assembly, annotation, and differential expression analysis"
 zenodo_link: 'https://zenodo.org/record/3541678'
 questions:
-- How to pre-process raw RNA-seq reads to perform *de novo* assemby ?
-- What are the steps to assemble a transcriptome *de novo* from RNA-seq reads ?
-- What are the steps to annotate a transcriptome *de novo* ?
-- How to use the transcriptome *de novo* as a reference for the identification of differentially expressed genes ?
+    - How to pre-process raw RNA-seq reads to perform *de novo* assemby ?
+    - What are the steps to assemble a transcriptome *de novo* from RNA-seq reads ?
+    - What are the steps to annotate a transcriptome *de novo* ?
+    - How to use the transcriptome *de novo* as a reference for the identification of differentially expressed genes ?
 objectives:
-- Check RNA-seq dataset quality 
-- Pre-process and perform trimming on raw data, then check quality of trimmed data
-- Use Trinity to generate a raw transcriptome *de novo*
-- Use Trinity suite and Busco to assess the assembly quality
-- Filter raw transcriptome
-- Use Trinotate to annotate the transcriptome
-- Use DESeq2 to perform differential analysis
-time_estimation: 16H
+    - Check RNA-seq dataset quality 
+    - Pre-process and perform trimming on raw data, then check quality of trimmed data
+    - Use Trinity to generate a raw transcriptome *de novo*
+    - Use Trinity suite and Busco to assess the assembly quality
+    - Filter raw transcriptome
+    - Use Trinotate to annotate the transcriptome
+time_estimation: 16h
 key_points:
-- The generation of a transcriptome *de novo* from RNA-seq reads requires many steps to ensure its quality and accuracy
-- *De novo* transcriptome assembly is a accessible method to study non-model organisms
+   - The generation of a transcriptome *de novo* from RNA-seq reads requires many steps to ensure its quality and accuracy
+   - It is an accessible method to study non-model organisms
 contributors:
-- abretaud
-- lecorguille
-- r1corre
-- xiliu
-- lleroi
-- alexcorm
-- paulineauffret
+    - abretaud
+    - lecorguille
+    - r1corre
+    - xiliu
+    - lleroi
+    - alexcorm
+    - paulineauffret
 
 ---
 
@@ -72,9 +70,6 @@ The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 cond
 >
 >    ```
 >    https://zenodo.org/record/3541678/files/A1_left.fq.gz
->    https://zenodo.org/record/3541678/files/A1_right.fq.gz
->    https://zenodo.org/record/3541678/files/A2_left.fq.gz
->    https://zenodo.org/record/3541678/files/A2_right.fq.gz
 >    https://zenodo.org/record/3541678/files/A3_left.fq.gz
 >    https://zenodo.org/record/3541678/files/A3_right.fq.gz
 >    https://zenodo.org/record/3541678/files/B1_left.fq.gz
@@ -95,7 +90,7 @@ The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 cond
 >
 >    {% snippet faqs/galaxy/datasets_change_datatype.md datatype="fastq.gz" %}
 >
-> 4. **Add tag(s) to this dataset (for example : `RAW` and `FASTQ`)**
+> 4. **Add tag(s) to this dataset (for example : `RAW`)**
 >
 >    {% snippet faqs/galaxy/datasets_add_tag.md %}
 >
@@ -114,7 +109,7 @@ As a result, sequencing reads might contain :
 - Unknown nucleotides (Ns)
 - Bad quality nucleotides
 - Unwanted sequences
-- Hexamers biases (Illumina. Now corrected ?) 
+- Hexamers biases (Illumina) 
  
 **Why do we need to correct those?**
 - To remove a lot of sequencing errors (detrimental to the vast majority of assemblers)
@@ -154,7 +149,7 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 
 > > ### {% icon comment %} Comment
 > >
-> > For an exhaustive review of **fastqc** outputs, let's go to **Quality Control tutorial**.
+> > For an exhaustive review of **fastqc** outputs, check out the [**"Quality control" tutorial**]({% link topics/sequence-analysis/tutorials/quality-control/tutorial.md %}).
 > {: .comment}
 >
 
@@ -311,7 +306,7 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 {: .question}
 
 > ### {% icon comment %} Other options
->  Other filtering strategiies can be used, like [**SortMeRNA** (Kopylova et al. 2012)](https://github.com/biocore/sortmerna), a tool developped to filter out rRNA from metatranscriptomic data. It is fast and it can discover new rRNA sequences.
+>  Other filtering strategies can be used, like [**SortMeRNA** (Kopylova et al. 2012)](https://github.com/biocore/sortmerna), a tool developped to filter out rRNA from metatranscriptomic data. It is fast and it can discover new rRNA sequences.
 > There are also HMM-based tools such as [**RNAmmer** (Lagesen et al. 2007)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1888812/) and [**Barrnap** (Seemann et al. 2013)](https://github.com/tseemann/barrnap), which predicts the location of ribosomal RNA genes in genomes.
 > 
 {: .comment}
@@ -409,6 +404,11 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >
 {: .hands_on}
 
+> ### {% icon comment %} RNA-seq reads sequencing error correction
+>  You can also use an additional step to pre-process RNA-seq reads before assembly, with [**Rcorrector** (Song et al. 2015)](https://github.com/biocore/sortmerna), which is a kmer-based error correction method for RNA-seq data.
+> 
+{: .comment}
+
 # Assembly (120 minutes - computing)
 
 To get to the transcripts information, we need to reconstruct all full-length transcripts from short reads. Such operation requires dedicated assemblers as the process of assembling a transcriptome violates many of the assumptions of genomic assemblers. For example, uniform coverage and the ‘one locus – one contig’ paradigm are not valid for RNA. An accurate transcriptome assembler will produce one contig per distinct transcript (isoform) rather than per locus, and different transcripts will have different coverage, reflecting their different expression levels.
@@ -422,8 +422,8 @@ To get to the transcripts information, we need to reconstruct all full-length tr
 
 ## Assembly with **Trinity**
 
-We will use *Trinity*, a *de novo* transcriptome assembler for short sequencing reads.   
-*Trinity* is the most widely used *de novo* transcriptome assembler and is in continuous development since several years. 
+We will use **Trinity**, a *de novo* transcriptome assembler for short sequencing reads.   
+**Trinity** is the most widely used *de novo* transcriptome assembler and is in continuous development since several years. 
 All information about Trinity assembler are here : [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
 ![trinity](../../images/full-de-novo/trinity_algo.PNG)
 
@@ -632,7 +632,7 @@ In case of Ex90N50, values are computed as usual N50 but limited to the top most
 > 
 {: .comment}
 
-## Transcriptome annotation completeness
+## Transcriptome annotation completeness with **Busco**
 
 [BUSCO (Benchmarking Universal Single-Copy Orthologs)](https://busco.ezlab.org/) allows a measure for quantitative assessment of genome/transcriptome/proteome based on evolutionarily informed expectations of gene content. 
 
@@ -924,7 +924,7 @@ The data presented for each entry is based on the UniProt Reference Proteomes bu
 {: .question}
 
 > ### {% icon comment %} Other options 
-> To get more functional annotations, we can also use [**SignalP (Nielsen et al, 2017)](https://services.healthtech.dtu.dk/service.php?SignalP) to predict the presence of signal peptides and the location of their cleavage sites in protein. There are also some alternatives to Trinotate to annotate a transcriptome, such as [Blast2Go](https://www.blast2go.com/), [**FunctionAnnotator (Chen et al 2017)**](https://www.nature.com/articles/s41598-017-10952-4)...
+> To get more functional annotations, we can also use [**SignalP** (Nielsen et al. 2017)](https://services.healthtech.dtu.dk/service.php?SignalP) to predict the presence of signal peptides and the location of their cleavage sites in protein. There are also some alternatives to Trinotate to annotate a transcriptome, such as [**Blast2Go**](https://www.blast2go.com/), [**FunctionAnnotator** (Chen et al. 2017)](https://www.nature.com/articles/s41598-017-10952-4)...
 > 
 {: .comment}
 
@@ -1086,8 +1086,6 @@ It is possible to have different numbers of replicates per condition.
 > 2. What can you say about the DE analysis results ?
 >
 > > ### {% icon solution %} Solution
-> >
-> > 1.  
 > > - `baseMean` : The average of the normalized count values, dividing by size factors, taken over all samples.  
 > > - `log2FoldChange` : The effect size estimate. This value indicates how much the gene or transcript's expression seems to have changed between the comparison and control groups. This value is reported on a logarithmic scale to base 2.  
 > > - `lfcSE` : The standard error estimate for the log2 fold change estimate.  
@@ -1152,8 +1150,9 @@ There are three different methods for partitioning genes into clusters:
 >
 {: .hands_on}
 
+
 # Conclusion
 {:.no_toc}
 
-Sum up the tutorial and the key takeaways here. We encourage adding an overview image of the
-pipeline used.
+In this tutorial, we built a *de novo* transcriptome from RNA-seq reads, then we review different quality control metrics. Then we performed a differential expression analysis on the test dataset to answer the following question : what are the genes deregulated in force-fed duck livers compared to control ?
+
