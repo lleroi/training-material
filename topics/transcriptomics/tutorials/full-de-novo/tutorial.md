@@ -125,8 +125,8 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 > 1. **FastQC** {% icon tool %} with the following parameters:
 >   - *"Short read data from your current history"*: `fastq_raw` (collection)
 > 2. **Rename and tag output collections**
+>    - *"FastQC on collection XX: RawData"* -> `FastQC_raw_data`
 >    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_Webpage`
->    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_data`
 > 
 > {% snippet faqs/galaxy/workflows_rename_output.md %}
 >   
