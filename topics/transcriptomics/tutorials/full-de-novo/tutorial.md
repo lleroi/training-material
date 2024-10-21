@@ -66,6 +66,9 @@ The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 cond
 >
 >    ```
 >    https://zenodo.org/record/3541678/files/A1_left.fq.gz
+>    https://zenodo.org/record/3541678/files/A1_right.fq.gz
+>    https://zenodo.org/record/3541678/files/A2_left.fq.gz
+>    https://zenodo.org/record/3541678/files/A2_right.fq.gz
 >    https://zenodo.org/record/3541678/files/A3_left.fq.gz
 >    https://zenodo.org/record/3541678/files/A3_right.fq.gz
 >    https://zenodo.org/record/3541678/files/B1_left.fq.gz
