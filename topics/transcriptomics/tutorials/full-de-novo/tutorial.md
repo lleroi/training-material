@@ -338,7 +338,6 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Drop reads below a specified length (MINLEN)`
 >                - *"Minimum length of reads to be kept"*: `50`
->    - *"Output trimmomatic log messages?"*: `Yes`
 > 2. **Rename** the Dataset Collection
 >    - `Trimmomatic on collection XX: paired` -> `R1_cleaned-reads`
 >    - `Trimmomatic on collection XX: paired` -> `R2_cleaned_reads`
