@@ -321,7 +321,8 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 >    - *"Input FASTQ file (R1/first of pair)"*: `R1_filtered_reads`
 >    - *"Input FASTQ file (R2/first of pair)"*: `R2_filtered_reads`
 >    - *"Perform initial ILLUMINACLIP step?"*: `Yes`
->    - *"Adapter sequences to use"*: `TruSeq3 (additional seqs) (paired-ended, for MiSeq and HiSeq)`
+>    - *"Select standard adapter sequences or provide custom?"*: `Standard`
+>        - "Adapter sequences to use": `TruSeq3 (additional seqs) (paired-ended, for MiSeq and HiSeq)`
 >    - In *"Trimmomatic Operation"*:
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Cut bases off end of a read, if below a threshold quality (TRAILING)`
