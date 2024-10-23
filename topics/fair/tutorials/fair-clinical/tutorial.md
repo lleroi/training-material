@@ -27,7 +27,8 @@ contributions:
   - kkamieniecka
   - tb143
   - poterlowicz-lab
-    
+  funding:
+    - elixir-uk-dash
 subtopic: fair-data
 
 requirements:
@@ -35,6 +36,13 @@ requirements:
     topic_name: fair
     tutorials:
       - fair-intro
+
+recordings:
+  - speakers:
+    - SNG888
+    date: '2024-09-12'
+    length: 1H2M54S
+    youtube_id: "48hRQM0yvao"
 
 ---
 

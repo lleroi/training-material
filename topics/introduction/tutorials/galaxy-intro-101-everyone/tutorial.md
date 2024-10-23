@@ -1,8 +1,8 @@
 ---
 layout: tutorial_hands_on
 
-title: "Galaxy 101 for everyone"
-zenodo_link: https://zenodo.org/record/1319069/files/iris.csv
+title: "Galaxy Basics for everyone"
+zenodo_link: https://zenodo.org/record/1319069/
 level: Introductory
 questions:
   - "What are the differences between the Iris species?"
@@ -22,14 +22,39 @@ key_points:
   - "Galaxy can connect to external sources for data import and visualization purposes"
   - "Galaxy provides ways to share your results and methods with others"
 subtopic: core
-contributors:
-  - annefou
-  - nagoue
-  - chrisbarnettster
-  - michelemaroni89
-  - olanag1
+priority: 2
+
+contributions:
+  authorship:
+    - annefou
+    - nagoue
+    - chrisbarnettster
+    - michelemaroni89
+    - olanag1
+    - tnabtaf
+    - shiltemann
+  funding:
+    - elixir-europe
+
+recordings:
+- captioners:
+  - astrovsky01
+  date: '2023-05-01'
+  length: 20M
+  galaxy_version: '23.0'
+  youtube_id: 64oS5uXVRV0
+  speakers:
+  - astrovsky01
+- captioners:
   - tnabtaf
-  - shiltemann
+  date: '2021-02-15'
+  galaxy_version: '21.01'
+  length: 1H15M
+  youtube_id: dguN6Xw2Azs
+  speakers:
+  - annefou
+  - rwinand
+
 ---
 
 
@@ -111,7 +136,7 @@ In other words, using a workflow makes it possible to apply the same procedure t
 
 > <hands-on-title>Data upload</hands-on-title>
 >
-> 1. {% tool [Import](upload1) %} the file `iris.csv` from [Zenodo](https://zenodo.org/record/1319069/files/iris.csv) or from the data library (ask your instructor)
+> 1. {% tool [Import](upload1) %} the file `iris.csv` from [Zenodo]({{ page.zenodo_link }}) or from the data library (ask your instructor)
 >
 >    ```
 >    https://zenodo.org/record/1319069/files/iris.csv
@@ -386,9 +411,9 @@ In our dataset, we have the following features measured for each sample:
 > 1. {% tool [Datamash](toolshed.g2.bx.psu.edu/repos/iuc/datamash_ops/datamash_ops/1.1.0) %} with the following parameters:
 >    - {% icon param-file %} *"Input tabular dataset"*: `iris tabular`
 >    - *"Group by fields"*: `5`
+>    - *"Sort input"*: `Yes`
 >    - *"Input file has a header line"*: `Yes`
 >    - *"Print header line"*: `Yes`
->    - *"Sort input"*: `Yes`
 >    - "Print all fields from input file": `No`
 >    - *"Ignore case when grouping"*: `Yes`
 >    - In *"Operation to perform on each group"*:

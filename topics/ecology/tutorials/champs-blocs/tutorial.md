@@ -14,11 +14,21 @@ key_points:
 - Diversity indicators
 - Champs Blocs
 - Boulder Fields
-contributors:
-- Marie59
-- yvanlebras
+tags:
+  - Ecosystem EBV class
+  - EBV dataset
+  - EBV workflow
+  - Marine ecosystems
+contributions:
+  authorship:
+  - Marie59
+  - yvanlebras
+  funding:
+  - pndb
 translations:
    - fr
+ 
+subtopic: ecologyanalysis
 ---
 
 
