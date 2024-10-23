@@ -158,10 +158,9 @@ Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to a
 >
 > 1. **MultiQC** {% icon tool %} with the following parameters:
 >    - In *"Results"*:
->        - {% icon param-repeat %} *"Insert Results"*
->            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*: in dataset collections, select `FastQC_raw_data`
->                    - *"Type of FastQC output?"*: `Raw data`
+>        - *"Which tool was used generate logs?"*: `FastQC`
+>            - *"Type of FastQC output?"*: `Raw data`
+>            - *"FastQC output"*: in dataset collections, select `FastQC_raw_data`
 >	 - *"Report title"*: `Training full-de-novo : raw QC` 
 >	 - *"Use only flat plots (non-interactive images)"*: `No` 
 >	 - *"Output the multiQC plots raw data?"*: `No`
@@ -339,8 +338,8 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >            - *"Select Trimmomatic operation to perform"*: `Drop reads below a specified length (MINLEN)`
 >                - *"Minimum length of reads to be kept"*: `50`
 > 2. **Rename** the Dataset Collection
->    - `Trimmomatic on collection XX: paired` -> `R1_cleaned-reads`
->    - `Trimmomatic on collection XX: paired` -> `R2_cleaned_reads`
+>    - `Trimmomatic on collection XX and collection XX (R1 paired)` -> `R1_cleaned-reads`
+>    - `Trimmomatic on collection XX and collection XX (R2 paired)` -> `R2_cleaned_reads`
 >
 >    > <comment-title></comment-title>
 >    >
@@ -385,18 +384,16 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >
 > 1. **MultiQC** {% icon tool %} with the following parameters:
 >    - In *"Results"*:
->        - {% icon param-repeat %} *"Insert Results"*
->            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*: in dataset collections, select `FastQC_R1_cleaned`
->                    - *"Type of FastQC output?"*: `Raw data`
->        - {% icon param-repeat %} *"Insert Results"*
->            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*: in dataset collections, select `FastQC_R2_cleaned`
->                    - *"Type of FastQC output?"*: `Raw data`
->	 - *"Report title"*: `Training full-de-novo : cleaned QC` 
->	 - *"Use only flat plots (non-interactive images)"*: `No` 
->	 - *"Output the multiQC plots raw data?"*: `No`
->	 - *"Output the multiQC log file?"*: `No`
+>        - *"Which tool was used generate logs?"*: `FastQC`
+>            - *"Type of FastQC output?"*: `Raw data`
+>            - *"FastQC output"*: in dataset collections, select `FastQC_R1_cleaned_Raw`
+>        - {% icon param-repeat %} *"Insert FastQC output"*
+>            - *"Type of FastQC output?"*: `Raw data`
+>            - *"FastQC output"*: in dataset collections, select `FastQC_R2_cleaned_Raw`
+>  - *"Report title"*: `Training full-de-novo : cleaned QC` 
+>  - *"Use only flat plots (non-interactive images)"*: `No` 
+>  - *"Output the multiQC plots raw data?"*: `No`
+>  - *"Output the multiQC log file?"*: `No`
 > 2. **Rename and tag output collection**
 >    - *"MultiQC on data XX: Webpage"* -> `MultiQC_cleaned_Webpage`
 >    - *"MultiQC on data XX: Stats"* -> `MultiQC_cleaned_Stats`
