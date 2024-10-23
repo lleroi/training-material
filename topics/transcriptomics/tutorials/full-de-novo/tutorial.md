@@ -338,7 +338,7 @@ t](../../images/full-de-novo/ExN50_plot.png)
 >            - *"Select Trimmomatic operation to perform"*: `Drop reads below a specified length (MINLEN)`
 >                - *"Minimum length of reads to be kept"*: `50`
 > 2. **Rename** the Dataset Collection
->    - `Trimmomatic on collection XX and collection XX (R1 paired)` -> `R1_cleaned-reads`
+>    - `Trimmomatic on collection XX and collection XX (R1 paired)` -> `R1_cleaned_reads`
 >    - `Trimmomatic on collection XX and collection XX (R2 paired)` -> `R2_cleaned_reads`
 >
 >    > <comment-title></comment-title>
@@ -368,12 +368,12 @@ t](../../images/full-de-novo/ExN50_plot.png)
 > <hands-on-title>Task description</hands-on-title>
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
->   - *"Short read data from your current history"*: `R1_cleaned-reads` (collection)
+>   - *"Short read data from your current history"*: `R1_cleaned_reads` (collection)
 > 2. **Rename** outputs : 
 >    - `FastQC on collection XX : Webpage` -> `FastQC_R1_cleaned_Webpage` 
 >    - `FastQC on collection XX : RawData` -> `FastQC_R1_cleaned_Raw` 
 > 3. **FastQC** {% icon tool %} with the following parameters:
->   - *"Short read data from your current history"*: `R2_cleaned-reads` (collection)
+>   - *"Short read data from your current history"*: `R2_cleaned_reads` (collection)
 > 4. **Rename** outputs : 
 >    - `FastQC on collection XX : Webpage` -> `FastQC_R2_cleaned_Webpage` 
 >    - `FastQC on collection XX : RawData` -> `FastQC_R2_cleaned_Raw` 
@@ -428,8 +428,8 @@ All information about Trinity assembler are here : [Trinity](https://github.com/
 > 1. **Trinity** {% icon tool %} with the following parameters:
 >    - *"Are you pooling sequence datasets?"*: `Yes`
 >        - *"Paired or Single-end data?"*: `Paired-end`
->            - *"Left/Forward strand reads"*: `R1_cleaned-reads`
->            - *"Right/Reverse strand reads"*: `R2_cleaned-reads`
+>            - *"Left/Forward strand reads"*: `R1_cleaned_reads`
+>            - *"Right/Reverse strand reads"*: `R2_cleaned_reads`
 >            - *"Strand specific data"*: `No`
 >            - *"Jaccard Clip options"*: `No`
 >    - *"Run in silico normalization of reads"*: `No`
@@ -458,12 +458,11 @@ All information about Trinity assembler are here : [Trinity](https://github.com/
 >
 {: .question}
 
-
-> ### {% icon comment %} Try it on!
+> ### {% icon comment %} Try it on! 
 > *rnaSPAdes* is a more recent assembler and can outperform *Trinity* results most of the time but not always. You can do
 > the *de novo* assembly with **rnaSPAdes** {% icon tool %} and compare the results!
 > 
-> 
+<!-- TODO to Update --> 
 > > ### {% icon hands_on %} Hands-on: Task description
 > >
 > > 1. **rnaSPAdes** {% icon tool %} with the following parameters:
