@@ -2,7 +2,6 @@
 layout: tutorial_hands_on
 
 title: "De novo transcriptome assembly, annotation, and differential expression analysis"
-zenodo_link: 'https://zenodo.org/record/3541678'
 questions:
     - How to pre-process raw RNA-seq reads to perform *de novo* assemby ?
     - What are the steps to assemble a transcriptome *de novo* from RNA-seq reads ?
@@ -20,13 +19,15 @@ key_points:
    - The generation of a transcriptome *de novo* from RNA-seq reads requires many steps to ensure its quality and accuracy
    - It is an accessible method to study non-model organisms
 contributors:
+    - cnoel-sebimer
+    - lleroi
+    - paulineauffret
     - abretaud
     - lecorguille
     - r1corre
     - xiliu
-    - lleroi
     - alexcorm
-    - paulineauffret
+
 
 ---
 
@@ -47,168 +48,182 @@ Examining non-model organisms can provide novel insights into the mechanisms und
 >
 {: .agenda}
 
-# Get data (10 minutes)
+# Get data (5 minutes)
 
-To cover this tutorial, we will use a toy dataset dedicated to practise. This dataset is composed of 6 RNA-seq samples (paired-end sequencing, 100bp) downsampled to 10,000 reads.
-The samples are transcriptomes of duck livers (*Anas platyrhynchos*) from 2 conditions (diet) : force-feeding (A) or not (B), with 3 replicates per condition. 
+In this tutorial, we will work with a real transcriptomic dataset from the free-living amoeba *Acanthamoeba castellanii*, an ubiquitous unicellular protozoan commonly found in artificial water systems such as plumbing and air conditioning units. This organism feeds on bacteria, viruses, and fungi via phagocytosis and acts as a vector for several pathogens, including *Legionella pneumophila*. Under stress, it enters a resistant cyst form.
+**For convenience and to reduce processing time, each FASTQ file has been downsampled to 1 million sequences**.
+
+The dataset, published by [Rolland et al. (2022)](https://www.nature.com/articles/s41467-022-31832-0), was generated to investigate early signalling pathways involved in the encystment process and to identify potential gene targets for its prevention. It includes 9 RNA-seq samples distributed across 3 experimental conditions:
+- 3 replicates from culture medium at time 0 (**P0**)   
+- 3 replicates from culture medium after 1 hour (**P1**)   
+- 3 replicates from encystment medium after 1 hour (**E1**)   
+
+![dataset_schema](../../images/full-de-novo/enkystement_dataset_schema.PNG)   
 
 > <hands-on-title>Data upload</hands-on-title>
 >
 > 1. **Create a new history for this tutorial**
 >
 >    {% snippet faqs/galaxy/histories_create_new.md %}
+> 
+> 2. **Import dataset from shared library 02_Formation_Transcriptomique_de_novo > 00_Raw_Data**
+> 
+>    {% snippet faqs/galaxy-fr/datasets_import_from_data_library.md path="02_Formation_Transcriptomique_de_novo > 00_Raw_Data" selection="the 18 available files" collection_name="00_Raw_Data" %}
+{: .hands_on}
+
+# Format the dataset (5 minutes)
+
+ For the next steps of the tutorial, we will need:
+ - a dataset list containing all R1 and R2 files for each sample ; 
+ - a dataset list containing only the R1 files ;
+ - a dataset list containing only the R2 files.
+ 
+ This step is specific to Galaxy’s dataset formatting requirements. It ensures that tools expecting paired-end files or separate R1/R2 inputs can process the data correctly without confusion.
+
+> <hands-on-title>Data formatting</hands-on-title>
+> 
+> 1. **Build a dataset list named `RawData` containing all R1 and R2 files for each sample**
+> 
+>    {% snippet faqs/galaxy-fr/collections_build_list.md name="RawData" datasets_description="Tout" %}
 >
-> 2. **Import the 12 `fq.gz` into a `List` collection named `fastq_raw` AND into a `List of Pairs` collection named `fastq_raw_paired`**
->    - Option 1: from a shared data library (ask your instructor)
->    - Option 2: from Zenodo using the URLs given below
->
->      [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3541678.svg)](https://doi.org/10.5281/zenodo.3541678)
->
->    ```
->    https://zenodo.org/record/3541678/files/A1_left.fq.gz
->    https://zenodo.org/record/3541678/files/A1_right.fq.gz
->    https://zenodo.org/record/3541678/files/A2_left.fq.gz
->    https://zenodo.org/record/3541678/files/A2_right.fq.gz
->    https://zenodo.org/record/3541678/files/A3_left.fq.gz
->    https://zenodo.org/record/3541678/files/A3_right.fq.gz
->    https://zenodo.org/record/3541678/files/B1_left.fq.gz
->    https://zenodo.org/record/3541678/files/B1_right.fq.gz
->    https://zenodo.org/record/3541678/files/B2_left.fq.gz
->    https://zenodo.org/record/3541678/files/B2_right.fq.gz
->    https://zenodo.org/record/3541678/files/B3_left.fq.gz
->    https://zenodo.org/record/3541678/files/B3_right.fq.gz
->    ```
->
->    {% snippet faqs/galaxy/datasets_import_via_link.md collection=true collection_type="List" collection_name="fastq_raw" %}
->    {% snippet faqs/galaxy/datasets_import_via_link.md collection=true collection_type="List of Pairs" collection_name="fastq_raw_paired" %}
->    {% snippet faqs/galaxy/datasets_import_from_data_library.md %}
->    {% snippet faqs/galaxy/datasets_rename.md datatype="fastq.gz" name="fastq_raw" %}
->
-> 3. When building collection `fastq_raw_paired`, associate each forward file to corresponding reverse file then rename each pair without extension, e.g. `A1`, `A2` etc.
-> 3. **Check that the datatype is `fastq.gz`**
+> 2. **Build a dataset list named `R1` containing only the R1 files**
+> 
+>    {% snippet faqs/galaxy-fr/histories_search.md search_term="R1" %}
+> 
+>    {% snippet faqs/galaxy-fr/collections_build_list.md name="R1" datasets_description="all _R1_001.fastq.gz files" %}
+> 
+> 3. **Build a dataset list named `R2` containing only the R2 files**
+> 
+>    {% snippet faqs/galaxy-fr/histories_search.md search_term="R2" %}
+> 
+>    {% snippet faqs/galaxy-fr/collections_build_list.md name="R2" datasets_description="all _R2_001.fastq.gz files" %}
+> 
+> 4. **Check that the datatype is `fastq.gz`**
 >
 >    {% snippet faqs/galaxy/datasets_change_datatype.md datatype="fastq.gz" %}
->
-> 4. **Add tag(s) to this dataset (for example : `RAW`)**
->
->    {% snippet faqs/galaxy/datasets_add_tag.md %}
->
 {: .hands_on}
 
 # Quality control and read cleaning (30 minutes)
 
-The first step of every sequencing data analysis must be **quality control**.   
-  
-Indeed, there are many possible sources of bias arising from :
-- **biological sampling** (contamination, low complexity...)
-- **library preparation** (adapters and primers sequences, polyA/T tails...)
-- **sequencing** (sequencing errors, optical duplicates, bad coverage...)   
+The first step in any sequencing data analysis is quality control.
 
-As a result, sequencing reads might contain :
-- Unknown nucleotides (Ns)
-- Bad quality nucleotides
-- Unwanted sequences
-- Hexamers biases (Illumina) 
- 
-**Why do we need to correct those?**
-- To remove a lot of sequencing errors (detrimental to the vast majority of assemblers)
-- Because most de-bruijn graph based assemblers can’t handle unknown nucleotides
+This is crucial because various sources of bias can affect the quality of your data, such as:
+- **Biological sampling** (e.g. contamination, low complexity)
+- **Library preparation** (e.g. adapter/primer sequences, polyA/T tails)
+- **Sequencing itself** (e.g. base-calling errors, optical duplicates, uneven coverage)
+
+As a result, sequencing reads may contain:
+- Unknown nucleotides (N)
+- Low-quality bases
+- Unwanted technical sequences
+- Sequence composition biases (e.g. hexamer bias with Illumina)
+
+Why correct these issues?
+- To eliminate sequencing errors that can compromise downstream analyses
+- Because most de Bruijn graph-based assemblers can't handle unknown or low-quality bases
 
 
-## Quality control with **fastqc**
+## Quality control with **FastQC** and **MultiQC**
    
 To get an overview of the sequencing data quality, we will use [**fastqc** (Simon Andrews, 2010) ](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) : *"fastqc provides a modular set of analyses which you can use to give a quick impression of whether your data has any problems of which you should be aware before doing any further analysis."* 
     
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running FastQC</hands-on-title>
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
->   - *"Short read data from your current history"*: `fastq_raw` (collection)
+>   - *"Short read data from your current history"*: `RawData` (collection) {% icon param-collection %}
 > 2. **Rename and tag output collections**
 >    - *"FastQC on collection XX: RawData"* -> `FastQC_raw_data`
 >    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_Webpage`
 > 
-> {% snippet faqs/galaxy/workflows_rename_output.md %}
->   
+> {% snippet faqs/galaxy/collections_rename.md name="FastQC_raw_data and FastQC_raw_Webpage" %}
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
 > What can you tell about the overall quality of the dataset ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
-> > Click on "*FastQC_raw_Webpage*" box in your history to see all the 12 QC reports.  
+> > Click on "*FastQC_raw_Webpage*" box in your history to see all the 18 QC reports.  
 > > You can see that it's not convenient at all to check the reports one by one !   
-> > Let's use a very usefull tool in Bioinformatics : MultiQC.
+> > Let's use a very useful tool in Bioinformatics : MultiQC.
 > > 
 > {: .solution}
->
 {: .question}
 
-> > ### {% icon comment %} Comment
+> <comment-title></comment-title>
 > >
 > > For an exhaustive review of **fastqc** outputs, check out the [**"Quality control" tutorial**]({% link topics/sequence-analysis/tutorials/quality-control/tutorial.md %}).
 > {: .comment}
->
 
-Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to aggrate all individual results in one summary.
 
-> ### {% icon hands_on %} Hands-on: Task description
+
+Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to aggregate all individual results in one summary page.
+
+> <hands-on-title>Running MultiQC on FastqQC reports</hands-on-title>
 >
 > 1. **MultiQC** {% icon tool %} with the following parameters:
 >    - In *"Results"*:
 >        - *"Which tool was used generate logs?"*: `FastQC`
 >            - *"Type of FastQC output?"*: `Raw data`
->            - *"FastQC output"*: in dataset collections, select `FastQC_raw_data`
+>            - *"FastQC output"*: in dataset collections {% icon param-collection %}, select `FastQC_raw_data` 
 >	 - *"Report title"*: `Training full-de-novo : raw QC` 
 >	 - *"Use only flat plots (non-interactive images)"*: `No` 
 >	 - *"Output the multiQC plots raw data?"*: `No`
 >	 - *"Output the multiQC log file?"*: `No`
-> 2. **Rename and tag output collection**
+> 2. **Rename the output collection**
 >    - *"MultiQC on data XX: Webpage"* -> `MultiQC_raw_Webpage`
 >    - *"MultiQC on data XX: Stats"* -> `MultiQC_raw_Stats`
->
 {: .hands_on}
 
-> ### {% icon question %} Questions
+
+> <question-title></question-title>
 >
-> 1. If the Phred score of the mean quality of sequences at base 40 is higher than 30, what does it means ?
-> 2. What can you tell about the overall quality of the dataset ? Is it Homogeneous ?
->
-> > ### {% icon solution %} Solution
+> 1. **Can you see the number of reads for each sample ? What do you notice ?**
+> 2. **What is the general quality of the reads based on Phred scores ?**
+> 3. **Is the base composition balanced across positions ?**
+> 4. **Are there overrepresented sequences, and what is their likely origin ?**
+> 5. **Is adapter contamination present? What should be done ?**
+> 6. **Is the duplication level high, and is it problematic ?**
+> 
+> > <solution-title></solution-title>
+> > 
+> > 1. **Can you see the number of reads for each sample ? What do you notice ?**
+> > *Open the MultiQC Webpage (click on the eye icon {% icon galaxy-eye %}). Under General Statistics section, click on "Configure columns" and check "Average Read Length" box.*
+> > All samples have the same number of reads (1,000,000). This is normal here as the samples were downsampled. However, in real-world scenarios, differences can occur due to factors like library prep efficiency or biological variation, so it's common to see some variability in read counts.
+> > 2. **What is the general quality of the reads based on Phred scores ?**
+> > The Phred score (or quality score) is a measure of the confidence in the basecalling made by the sequencer. It reflects the probability that a base is called incorrectly.
+> > It is logarithmically related to the error probability: Q=−10⋅log(P) where: Q = Phred score and P = probability of base call being incorrect.
+> > A Phred score ≥ 40 is considered very high quality.
+> > Overall, the quality is good. Most samples show a mean Phred score >30 across all positions, indicating reliable base calling with a low error probability (<0.1%). The quality remains stable throughout the read length, suggesting successful sequencing.
+> > 3. **Is the base composition balanced across positions ?**
+> > Yes, the base composition appears relatively balanced, especially in the early positions, which is expected for RNA-seq datasets. Some deviation may occur at the start due to hexamer priming or specific transcript content but nothing indicates strong bias or contamination.
+> > 4. **Are there overrepresented sequences, and what is their likely origin ?**
+> > Yes, several sequences are systematically overrepresented across all 18 samples. These include:
+> > - Sequences like GATCGGAAGAG... → typical Illumina adapters
+> > - Other consistent motifs likely related to primers or technical artifacts
+> > These are most likely from library preparation artifacts (e.g. adapter dimers, priming sequences), not biological content.
+> > 5. **Is adapter contamination present? What should be done ?**
+> > Yes. The presence of known adapter sequences (e.g. Illumina TruSeq) is confirmed in the overrepresented sequence table.
+> > Adapter trimming is needed!
+> > 6. **Is the duplication level high, and is it problematic ?**
+> > Here duplication levels range from ~28% to 35%, which is expected in RNA-seq due to:
+> > - Highly expressed transcripts causing biological duplicates
+> > - Lower complexity compared to WGS
+> > - Possible PCR amplification biases
+> > This does not necessarily indicate a problem in RNA-seq, unlike WGS. Interpretation depends on context. Here, levels are consistent and acceptable.
 > >
-> > 1. It means that the sequencing error rate is less than 1 base in every 1,000 bases. Score Q = -10log(E)
-> > 2. Yes but adapter trimming is necessary.
 > >
 > {: .solution}
->
 {: .question}
 
->
+> <comment-title></comment-title>
+> > For more guidance on interpreting quality metrics: [FastQC Documentation](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+{: .comment}
 
-<!-- ## Quality control with **MultiQC** - step 2/2
-
-> <hands-on-title>Task description</hands-on-title>
->
-> 1. **MultiQC** {% icon tool %} with the following parameters:
->    - In *"Results"*:
->        - {% icon param-repeat %} *"Insert Results"*
->            - *"Which tool was used generate logs?"*: `FastQC`
->                - In *"FastQC output"*:
->                    - *"Type of FastQC output?"*: `Raw data`
->                    - *"FastQC output"*: `data XX, data XX, and others (flattened)`
->
->    > <comment-title></comment-title>
->    >
->    > We agree that it's not comfortable. The wrapper of MultiQC must be improved
->    {: .comment}
->
-{: .hands_on} -->
-
-
-
-<!-- ## Sequencing error correction with **Rcorrector**  
+ 
+## Sequencing error correction with **Rcorrector**  
   
 To address the sequencing errors in the raw sequencing reads, we can use [**Rcorrector** (Song et al., 2015)](https://github.com/mourisl/Rcorrector) : *a kmer-based error correction method for RNA-seq data, based on the path search algorithm.*  
 
@@ -219,45 +234,65 @@ To address the sequencing errors in the raw sequencing reads, we can use [**Rcor
 Path extension in Rcorrector. Four possible path continuations at the AGTC k-mer (k=4) in the De Bruijn graph for the r=AAGTCATAA read sequence. Numbers in the vertices represent k-mer counts. The first (top) path corresponds to the original read’s representation in the De Bruijn graph. The extension is pruned after the first step, AGTC →GTCA, as the count M(GTCA)=4 falls below the local cutoff (determined based on the maximum k-mer count (494) of the four possible successors of AGTC). The second path (yellow) has higher k-mer counts but it introduces four corrections, changing the read into AAGTCCGTC. The third path (blue) introduces only two corrections, to change the sequence into AAGTCGTTA, and is therefore chosen to correct the read. The fourth (bottom) path is pruned as the k-mer count for GTCT does not pass the threshold. Paths 2 and 3 are likely to indicate paralogs and/or splice variants of this gene.   
 
 
-<!  ### {% icon hands_on %} Hands-on: Task description
+> <hands-on-title>Running Rcorrector</hands-on-title>
 >
-> 1. **Rcorrector** {% icon tool %} with the following parameters: 
->    - *"Is this library paired- or single-end?"*: `Paired-end (as collection)`
->        - *"FastQ file R1 (left)"*: `R1`
->        - *"FastQ file R2 (right)"*: `R2`
->        - *"Filter uncorrectable reads"*: `Yes`
->    - *"Additional options"*: `No`   
-> 2. **Rename the resulting datasets**
->    - `RNA-seq Rcorrector on XX ->  XX_corrected`  
-> 
+> 1. **RNA-seq Rcorrector** {% icon tool %} with the following parameters:
+>    - *"Is this library paired- or single-end?"*: `paired`
+>    - *"FastQ file R1 (left)"*: {% icon param-collection %} `R1` (collection) 
+>    - *"FastQ file R2 (left)"*: {% icon param-collection %} `R2` (collection) 
+>    - *"Filter uncorrectable reads*: `Yes` 
+>    - *"Additional options*: `No`
+> 2. Rename the output collections
+>    - *"RNA-seq Rcorrector on collection XX: fixed R1"* -> `Fixed_R1`
+>    - *"RNA-seq Rcorrector on collection XX: fixed R2"* -> `Fixed_R2`
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
-> For sample **A1** :
-> 1. how many reads were **corrected** ?
-> 2. how many reads were **discarded** ?
-> 3. what is the percentage of **remaining reads** ?
+>  Given that FastQC showed good quality reads, is the correction rate reported by Rcorrector consistent ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
-> > Click on "*RNA-seq Rcorrector on data XXX*" box in your history to get a report.
-> > 1. `R1 corrected:488` et `R2 corrected:680`  
-> > `pairs corrected:1016`
-> > 2. `removed PE reads:4649`
-> > 3. `53.51%`
+> > Click on `Fixed_R1` in your history, then select `P1-3_subsampled_R1_001.fastq.gz`, for example. 
+> Click on the info icon {% icon galaxy-info %}, then open `Tool standard error` ('stderr') to view the run’s log file.  
+> > At the end of the log, you’ll see something like:  
+> > ```
+> > Processed 2000000 reads  
+> > Corrected 1351425 bases.
+> > ```
+> > 
+> > Below is a table summarizing the results for all 9 samples:   
+> > 
+> > | Sample | Number of reads processed | Number of reads corrected | % of reads corrected |
+> > |--------|----------------------------|----------------------------|----------------------|
+> > | P1-3   | 2000000                    | 1351423                    | 0.450474333          |
+> > | P1-2   | 2000000                    | 1350668                    | 0.450222667          |
+> > | P1-1   | 2000000                    | 1365138                    | 0.455046             |
+> > | P0-3   | 2000000                    | 1370210                    | 0.456736667          |
+> > | P0-2   | 2000000                    | 1394060                    | 0.464686667          |
+> > | P0-1   | 2000000                    | 1368961                    | 0.456320333          |
+> > | E1-3   | 2000000                    | 1378207                    | 0.459402333          |
+> > | E1-2   | 2000000                    | 1388749                    | 0.462916333          |
+> > | E1-1   | 2000000                    | 1352088                    | 0.450696             |
+> >
+> > After running Rcorrector on the dataset, we observed that **approximately 0.45% of total bases were corrected in each sample**.
+> > This low correction rate is consistent with the initial FastQC results, which indicated **high read quality**. 
+> > Although minimal, these corrections can help reduce potential alignment errors and improve downstream quantification accuracy.
 > {: .solution}
->
-{: .question} -->
+{: .question}
+
+> <comment-title></comment-title>
+> While Rcorrector remains a reliable tool for correcting Illumina RNA-seq reads, its use is no longer essential in most workflows. Modern RNA-seq data are typically of high quality. However, correction can still be useful when working with degraded RNA, non-model organisms, or low-quality data. In this tutorial, we include Rcorrector to demonstrate a complete preprocessing workflow.
+{: .comment}
 
 ## rRNA removal with **Bowtie2**  
   
 One of the main source of contamination of RNA-seq samples is **ribosomal RNA**. Indeed, ~90% of total RNA correspond to rRNA. Before sequencing, ribodepletion and polyA selection are common mmethods to clean the samples, but it does not filter out all rRNA. After sequencing, remove rRNA reads from raw reads and detect rRNA transcripts might be usefull.
 
 To do so, we use [**Bowtie 2**](https://github.com/BenLangmead/bowtie2) which is an ultrafast and memory-efficient tool for aligning sequencing reads to reference sequences. 
-Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : high quality ribosomal RNA database.
+Here, the reference database will be [**Silva**](https://www.arb-silva.de/): high quality ribosomal RNA database.
 
-> ### {% icon hands_on %} Hands-on: Task description
+> <hands-on-title>Running Bowtie2 on Silva</hands-on-title>
 > 1. **Bowtie2** {% icon tool %} with the following parameters:
 >    - *"Is this single or paired library"*: `Paired-end Dataset Collection`
 >	 - *"FASTQ Paired Dataset"* : `fastq_raw_paired`  
@@ -272,41 +307,64 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 >    - *"Do you want to tweak SAM/BAM Options?"*: `No`
 >    - *"Save the bowtie2 mapping statistics to the history"*: `Yes`
 > 2. **Rename the resulting datasets**
->    - `Bowtie2 on collection XX: unaligned reads (R)` -> `R1_filtered_reads`     
->    - `Bowtie2 on collection XX: unaligned reads (L)` -> `R2_filtered_reads` 
->    - `Bowtie2 on collection XX: mapping stats` -> `filtered_reads_mapping_stats` 
->
+>    - `Bowtie2 on collection XX: unaligned reads (L)` -> `R1_filtered_reads` 
+>    - `Bowtie2 on collection XX: unaligned reads (R)` -> `R2_filtered_reads`
+>    - `Bowtie2 on collection XX: mapping stats` -> `filtered_reads_mapping_stats`
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <comment-title></comment-title>
+The --very-sensitive preset in Bowtie 2 modifies several internal parameters to increase alignment sensitivity. Specifically, it sets -D to 20 (more seed extension attempts), -R to 3 (more retries after failed alignments), and -L to 20 (shorter seed length for better sensitivity). It also adjusts the seed interval function -i to S,1,0.50, which places seeds closer together for more thorough searching. The mismatch allowance in the seed (-N) remains at 0. These changes make Bowtie 2 try harder to align difficult reads, improving accuracy at the cost of longer runtime.
+{: .comment}
+
+
+To analyze the mapping results, we will once again use MultiQC on Bowtie2 mapping stats files.
+
+> <hands-on-title>Running MultiQC on Bowtie2 reports</hands-on-title>
+>
+> 1. **MultiQC** {% icon tool %} with the following parameters:
+>    - In *"Results"*:
+>        - *"Which tool was used generate logs?"*: `Bowtie2`
+>            - *"Output of Bowtie2"*: in dataset collections {% icon param-collection %}, select `filtered_reads_mapping_stats`
+>	 - *"Report title"*: `Training full-de-novo : rRNA removal with Bowtie2` 
+>	 - *"Use only flat plots (non-interactive images)"*: `No` 
+>	 - *"Output the multiQC plots raw data?"*: `No`
+>	 - *"Output the multiQC log file?"*: `No`
+> 2. **Rename the output collection**
+>    - *"MultiQC on data XX: Webpage"* -> `MultiQC_Bowtie2_Webpage`
+>    - *"MultiQC on data XX: Stats"* -> `MultiQC_Bowtie2_Stats`
+{: .hands_on}
+
+> <question-title></question-title>
 > 
-> 1. For sample A3 :  
-> 1.1. What is the mapping rate ? What does it means ?   
-> 2. For sample A1 :  
-> 2.1. What is mapping rate ?  
-> 2.2. Which file should you continue the analysis with ?   
+> 1. What can you conclude from these Bowtie 2 mapping results against the SILVA rRNA database ?
+> 2. Which files should you continue the analysis with ?   
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
-> > 1.1. 
-> > ```
-> > 0.00% overall alignment rate
-> > ```
-> > No rRNA was detected in the sample.   
-> > 2.1.    
-> > ```
-> > 0.01% overall alignment rate  
-> > ```   
-> > 2.2. We should discard all read mapping to rRNA sequences and continue the analysis with **unmapped** reads.
+> > 1. Open the MultiQC Webpage (click on the eye icon {% icon galaxy-eye %}).
+> > You should see:
+> > 
+> > | Sample Name  | % Aligned |
+> > |-----------|-----------|
+> > | E1-1      | 9.8%      |
+> > | E1-2      | 8.8%      |
+> > | E1-3      | 13.0%     |
+> > | P0-1      | 9.6%      |
+> > | P0-2      | 8.9%      |
+> > | P0-3      | 14.9%     |
+> > | P1-1      | 8.2%      |
+> > | P1-2      | 13.2%     |
+> > | P1-3      | 10.6%     |
 > >
+> > Mapping raw RNA-seq reads to the SILVA SSU and LSU databases using Bowtie 2 in --very-sensitive mode reveals that 8–15% of reads align to rRNA, indicating moderate contamination. This is typical for samples without rRNA depletion. The variability between samples may reflect biological or technical differences. These results justify removing rRNA-aligned reads to clean the dataset before transcriptomic analysis.
+> > 
+> > 2. We should discard all read mapping to rRNA sequences and continue the analysis with **unmapped** reads, `R1_filtered_reads` and `R2_filtered_reads`.
 > {: .solution}
->
 {: .question}
 
-> ### {% icon comment %} Other options
+> <comment-title></comment-title>
 >  Other filtering strategies can be used, like [**SortMeRNA** (Kopylova et al. 2012)](https://github.com/biocore/sortmerna), a tool developped to filter out rRNA from metatranscriptomic data. It is fast and it can discover new rRNA sequences.
-> There are also HMM-based tools such as [**RNAmmer** (Lagesen et al. 2007)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1888812/) and [**Barrnap** (Seemann et al. 2013)](https://github.com/tseemann/barrnap), which predicts the location of ribosomal RNA genes in genomes.
-> 
+>  There are also HMM-based tools such as [**RNAmmer** (Lagesen et al. 2007)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1888812/) and [**Barrnap** (Seemann et al. 2013)](https://github.com/tseemann/barrnap), which predicts the location of ribosomal RNA genes in genomes.
 {: .comment}
 
 ## Read cleaning with **Trimmomatic** 
@@ -317,119 +375,149 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/) : hi
 >
 > 1. **Trimmomatic** {% icon tool %} with the following parameters:
 >    - *"Single-end or paired-end reads?"*: `Paired-end (two separate input files)`
->    - *"Input FASTQ file (R1/first of pair)"*: `R1_filtered_reads`
->    - *"Input FASTQ file (R2/first of pair)"*: `R2_filtered_reads`
+>    - *"Input FASTQ file (R1/first of pair)"*: in dataset collections {% icon param-collection %}, select `R1_filtered_reads`
+>    - *"Input FASTQ file (R2/first of pair)"*: in dataset collections {% icon param-collection %}, select `R2_filtered_reads`
 >    - *"Perform initial ILLUMINACLIP step?"*: `Yes`
 >    - *"Select standard adapter sequences or provide custom?"*: `Standard`
 >        - "Adapter sequences to use": `TruSeq3 (additional seqs) (paired-ended, for MiSeq and HiSeq)`
+>        - "Maximum mismatch count which will still allow a full match to be performed": `2`
+>        - "How accurate the match between the two 'adapter ligated' reads must be for PE palindrome read alignment": `30`
+>        - "How accurate the match between any adapter etc. sequence must be against a read": `10`
+>        - "Minimum length of adapter that needs to be detected (PE specific/palindrome mode)": `8`
+>        - "Always keep both reads (PE specific/palindrome mode)?": `Yes`
 >    - In *"Trimmomatic Operation"*:
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Cut bases off end of a read, if below a threshold quality (TRAILING)`
+>            - "Minimum quality required to keep a base": `3`
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
-t_toy_dataset](../../images/full-de-novo/ExN50_plot_toy_dataset.png)
-t](../../images/full-de-novo/ExN50_plot.png)
 >            - *"Select Trimmomatic operation to perform"*: `Cut bases off start of a read, if below a threshold quality (LEADING)`
+>            - "Minimum quality required to keep a base": `3`
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Sliding window trimming (SLIDINGWINDOW)`
+>            - "Number of bases to average across": `4`
+>            - "Average quality required": `20`
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Drop reads with average quality lower than a specific level (AVGQUAL)`
->                - *"Minimum length of reads to be kept"*: `25`
+>                - *"Minimum average quality required to keep a read"*: `25`
 >        - {% icon param-repeat %} *"Insert Trimmomatic Operation"*
 >            - *"Select Trimmomatic operation to perform"*: `Drop reads below a specified length (MINLEN)`
->                - *"Minimum length of reads to be kept"*: `50`
+>                - *"Minimum length of reads to be kept"*: `70`
 > 2. **Rename** the Dataset Collection
 >    - `Trimmomatic on collection XX and collection XX (R1 paired)` -> `R1_cleaned_reads`
 >    - `Trimmomatic on collection XX and collection XX (R2 paired)` -> `R2_cleaned_reads`
 >
 >    > <comment-title></comment-title>
 >    >
->    > You can check the Trimmomatic log files to get the number of reads before and after cleaning. To do so, click on the "show details" **i** icon, then click on *Tool Standard Output:stdout*
+>    > You can check the Trimmomatic log files to get the number of reads before and after cleaning. 
+     > To do so, click on the info icon {% icon galaxy-info %}, then click on *Tool Standard Output:stdout*
+     > Example for P1-3:
 >    > ```
->    > Input Read Pairs: 10000
->    > Both Surviving: 8804 (88.04%)
->    > Forward Only Surviving: 491 (4.91%)
->    > Reverse Only Surviving: 456 (4.56%) Dropped: 249 (2.49%)
+>    > Input Read Pairs: 690897 
+>    > Both Surviving: 604002 (87.42%) 
+>    > Forward Only Surviving: 54227 (7.85%) 
+>    > Reverse Only Surviving: 13515 (1.96%) 
+>    > Dropped: 19153 (2.77%)
 >    > ```
 >    {: .comment}
 >
 >    {% snippet faqs/galaxy/collections_rename.md %}
->
 {: .hands_on}
->
->
-> ### {% icon comment %} Other option 
-> You can also use [**Trim Galore** (Kueger et al. 2012)](https://github.com/FelixKrueger/TrimGalore), to trim raw sequencing data.
-> 
-{: .comment}
-
 
 ## Quality control after cleaning
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running FastQC on trimmed reads</hands-on-title>
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
->   - *"Short read data from your current history"*: `R1_cleaned_reads` (collection)
+>   - *"Short read data from your current history"*: in dataset collections {% icon param-collection %}, select `R1_cleaned_reads` 
 > 2. **Rename** outputs : 
 >    - `FastQC on collection XX : Webpage` -> `FastQC_R1_cleaned_Webpage` 
 >    - `FastQC on collection XX : RawData` -> `FastQC_R1_cleaned_Raw` 
 > 3. **FastQC** {% icon tool %} with the following parameters:
->   - *"Short read data from your current history"*: `R2_cleaned_reads` (collection)
+>   - *"Short read data from your current history"*: in dataset collections {% icon param-collection %}, select `R2_cleaned_reads` 
 > 4. **Rename** outputs : 
 >    - `FastQC on collection XX : Webpage` -> `FastQC_R2_cleaned_Webpage` 
->    - `FastQC on collection XX : RawData` -> `FastQC_R2_cleaned_Raw` 
->
+>    - `FastQC on collection XX : RawData` -> `FastQC_R2_cleaned_Raw`
 {: .hands_on}
 
-> ### {% icon hands_on %} Hands-on: Task description
+> <hands-on-title>Running MultiQC on trimmed reads</hands-on-title>
 >
 > 1. **MultiQC** {% icon tool %} with the following parameters:
 >    - In *"Results"*:
 >        - *"Which tool was used generate logs?"*: `FastQC`
 >            - *"Type of FastQC output?"*: `Raw data`
->            - *"FastQC output"*: in dataset collections, select `FastQC_R1_cleaned_Raw`
->        - {% icon param-repeat %} *"Insert FastQC output"*
->            - *"Type of FastQC output?"*: `Raw data`
->            - *"FastQC output"*: in dataset collections, select `FastQC_R2_cleaned_Raw`
->  - *"Report title"*: `Training full-de-novo : cleaned QC` 
+>            - *"FastQC output"*: in dataset collections {% icon param-collection %}, select `FastQC_R1_cleaned_Raw`
+>  - *"Report title"*: `Training full-de-novo : R1 cleaned QC` 
 >  - *"Use only flat plots (non-interactive images)"*: `No` 
 >  - *"Output the multiQC plots raw data?"*: `No`
 >  - *"Output the multiQC log file?"*: `No`
 > 2. **Rename and tag output collection**
->    - *"MultiQC on data XX: Webpage"* -> `MultiQC_cleaned_Webpage`
->    - *"MultiQC on data XX: Stats"* -> `MultiQC_cleaned_Stats`
+>    - *"MultiQC on data XX: Webpage"* -> `MultiQC_R1_cleaned_Webpage`
+>    - *"MultiQC on data XX: Stats"* -> `MultiQC_R1_cleaned_Stats`
 >
+> 3. **MultiQC** {% icon tool %} with the following parameters:
+>    - In *"Results"*:
+>        - *"Which tool was used generate logs?"*: `FastQC`
+>            - *"Type of FastQC output?"*: `Raw data`
+>            - *"FastQC output"*: in dataset collections {% icon param-collection %}, select `FastQC_R2_cleaned_Raw`
+>  - *"Report title"*: `Training full-de-novo : R2 cleaned QC` 
+>  - *"Use only flat plots (non-interactive images)"*: `No` 
+>  - *"Output the multiQC plots raw data?"*: `No`
+>  - *"Output the multiQC log file?"*: `No`
+> 4. **Rename and tag output collection**
+>    - *"MultiQC on data XX: Webpage"* -> `MultiQC_R2_cleaned_Webpage`
+>    - *"MultiQC on data XX: Stats"* -> `MultiQC_R2_cleaned_Stats`
 {: .hands_on}
 
-> ### {% icon comment %} RNA-seq reads sequencing error correction
->  You can also use an additional step to pre-process RNA-seq reads before assembly, with [**Rcorrector** (Song et al. 2015)](https://github.com/biocore/sortmerna), which is a kmer-based error correction method for RNA-seq data.
+> <question-title></question-title>
 > 
+> 1. How can you check if adapters were successfully removed after trimming ?
+> 2. What does it mean if adapter sequences are still detected after trimming ?
+>
+> > <solution-title></solution-title>
+> >
+> > 1. Open the MultiQC Webpage (click on the eye icon {% icon galaxy-eye %}).
+> > Look at the "Adapter Content" section. You should see **"No samples found with any adapter contamination > 0.1%"**, meaning that adapter sequences were effectively removed and are no longer present at detectable levels in your trimmed data.
+> > 2. It means that some adapters were not fully removed. This could happen if the wrong adapter sequences was set in the parameters. 
+> > 
+> {: .solution}
+{: .question}
+
+> <comment-title></comment-title>
+While this tutorial uses Trimmomatic for read trimming, you can also try [Trim Galore](https://www.bioinformatics.babraham.ac.uk/projects/trim_galor) {% icon tool %}, a simpler alternative that combines Cutadapt and FastQC. It’s especially handy for quick and consistent adapter removal and quality filtering.
 {: .comment}
 
 # Assembly (120 minutes - computing)
 
 To get to the transcripts information, we need to reconstruct all full-length transcripts from short reads. Such operation requires dedicated assemblers as the process of assembling a transcriptome violates many of the assumptions of genomic assemblers. For example, uniform coverage and the ‘one locus – one contig’ paradigm are not valid for RNA. An accurate transcriptome assembler will produce one contig per distinct transcript (isoform) rather than per locus, and different transcripts will have different coverage, reflecting their different expression levels.
 
-> ### {% icon comment %} Comment
-> 
+> <comment-title></comment-title>
 > Do you want to learn more about the principles behind assembly? Follow our [training](https://training.galaxyproject.org/training-material/topics/assembly/tutorials/debruijn-graph-assembly/slides.html).
-> 
 {: .comment}
 
 
 ## Assembly with **Trinity**
 
-We will use **Trinity**, a *de novo* transcriptome assembler for short sequencing reads.   
-**Trinity** is the most widely used *de novo* transcriptome assembler and is in continuous development since several years. 
-All information about Trinity assembler are here : [Trinity](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
+We will use **Trinity**, a *de novo* transcriptome assembler for short sequencing reads.
+**Trinity** is a widely used software for *de novo* transcriptome assembly from RNA-seq data, particularly when no reference genome is available. 
+It reconstructs full-length transcripts by assembling short sequencing reads into **contigs**, leveraging the natural coverage and redundancy of RNA-seq. 
+Trinity operates in three main steps: **Inchworm, Chrysalis, and Butterfly**, which together build and refine transcript structures. 
+This tool is especially valuable for **studying non-model organisms, discovering novel transcripts, and analyzing alternative splicing**. 
+Before running Trinity, **input reads should be high-quality and free of contaminants such as rRNA**, ensuring a more accurate and efficient assembly.
+
+![trinity_kmers](../../images/full-de-novo/trinity_kmers.PNG)
+
 ![trinity](../../images/full-de-novo/trinity_algo.PNG)
 
-> <hands-on-title>Task description</hands-on-title>
+> <comment-title></comment-title>
+> For detailed information on the Trinity assembler, please refer to the official [Trinity documentation.](https://github.com/trinityrnaseq/trinityrnaseq/wiki)
+{: .comment}
+> <hands-on-title>Running Trinity</hands-on-title>
 >
 > 1. **Trinity** {% icon tool %} with the following parameters:
 >    - *"Are you pooling sequence datasets?"*: `Yes`
 >        - *"Paired or Single-end data?"*: `Paired-end`
->            - *"Left/Forward strand reads"*: `R1_cleaned_reads`
->            - *"Right/Reverse strand reads"*: `R2_cleaned_reads`
+>            - *"Left/Forward strand reads"*: in dataset collections {% icon param-collection %}, select `R1_cleaned_reads`
+>            - *"Right/Reverse strand reads"*: in dataset collections {% icon param-collection %}, select `R2_cleaned_reads`
 >            - *"Strand specific data"*: `No`
 >            - *"Jaccard Clip options"*: `No`
 >    - *"Run in silico normalization of reads"*: `No`
@@ -440,50 +528,82 @@ All information about Trinity assembler are here : [Trinity](https://github.com/
 >    - `Trinity on data XX, data YY, and others: Gene to transcripts map` -> `Gene_to_transcripts_map_raw`
 >
 >    {% snippet faqs/galaxy/datasets_rename.md %}
->
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
 > 2. How are named the transcripts by Trinity in `transcriptome_raw.fasta` assembly ? What does it mean ?
 > 1. What is the file `Gene_to_transcripts_map_raw` ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
 > > 1. Trinity groups transcripts into clusters based on shared sequence content. Such a transcript cluster is very loosely referred to as a 'gene'. This information is encoded in the Trinity fasta accession. The accession encodes the Trinity 'gene' and 'isoform' information. For example, the accession 'TRINITY_DN1000_c115_g5_i1' indicates Trinity read cluster 'TRINITY_DN1000_c115', gene 'g5', and isoform 'i1'. The Path information stored in the header ("path=[31015:0-148 23018:149-246]") indicates the path traversed in the Trinity compacted de Bruijn graph to construct that transcript. 
 > > 
 > > 2. A Trinity gene is a collection of related transcripts. This file lists genes and related isoforms.
 > > [Learn more about Trinity output.](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Output-of-Trinity-Assembly)
+> > 
 > {: .solution}
->
 {: .question}
 
-> ### {% icon comment %} Try it on! 
-> *rnaSPAdes* is a more recent assembler and can outperform *Trinity* results most of the time but not always. You can do
-> the *de novo* assembly with **rnaSPAdes** {% icon tool %} and compare the results!
-> 
-<!-- TODO to Update --> 
-> > ### {% icon hands_on %} Hands-on: Task description
-> >
-> > 1. **rnaSPAdes** {% icon tool %} with the following parameters:
-> >   - *"Single-end or paired-end short-reads"*: `Paired-end: individual datasets`
-> >   - *"Select optional output file(s)"*: `Transcripts`
-> >
-> {: .hands_on}
+> <comment-title></comment-title>
+> [rnaSPAdes](https://gensoft.pasteur.fr/docs/SPAdes/3.14.0/rnaspades_manual.html) is a more recent de novo transcriptome assembler developed as part of the SPAdes toolkit. It is specifically designed for RNA-seq data and offers an alternative to assemblers like Trinity.
+> Trinity and rnaSPAdes are both de novo transcriptome assemblers designed for RNA-seq data, but they differ in architecture and approach. 
+> Trinity uses a three-module pipeline (Inchworm, Chrysalis, Butterfly) to build and explore de Bruijn graphs per component, aiming to reconstruct full-length transcripts and isoforms. 
+> In contrast, rnaSPAdes employs an integrated de Bruijn graph framework with built-in error correction, expression-guided path selection, and redundancy reduction. 
+> While Trinity is known for its sensitivity and widespread use, it can produce more redundant assemblies and is often more resource-intensive. 
+> rnaSPAdes, being newer, tends to generate more compact assemblies and is generally faster and lighter on computational resources, though results may vary depending on the dataset.
 {: .comment}
 
-> ### {% icon tip %} Benchmarking
+> <comment-title></comment-title>
 > [De novo transcriptome assembly: A comprehensive cross-species comparison of short-read RNA-Seq assemblers](https://academic.oup.com/gigascience/article/8/5/giz039/5488105)
-> 
 {: .comment}
 
 # Assembly assessment / cleaning
 
 The *de novo* transcriptome assembly needs to be evaluated before any further downstream analyses in order to check if it reaches sufficient quality criteria. We generally use 3 criteria to perform such analysis:
+- **Completeness** according to conserved ortholog content.
 - **RNA-Seq read representation of the assembly** (i.e. coverage) to ensure that reads used for the assembly are mapped back to the assembled transcriptome.
 - **Contiguity/metrics** such as the number of transcripts, isoforms, the N50, etc.
-- **Completeness** according to conserved ortholog content.
 
+
+## Transcriptome annotation completeness with **Busco**
+
+[BUSCO (Benchmarking Universal Single-Copy Orthologs)](https://busco.ezlab.org/) is a widely used tool for evaluating the completeness of genome, transcriptome, or proteome assemblies. It allows a measure for quantitative assessment of genome/transcriptome/proteome completeness based on evolutionarily informed expectations of gene content. When applied to a raw transcriptome assembly—such as one produced by Trinity from RNA-seq reads of Acanthamoeba castellanii—BUSCO searches for conserved single-copy orthologs using a relevant database, in this case eukaryota_odb10, which contains genes expected to be present across most eukaryotic species. Since A. castellanii is a eukaryote belonging to the Amoebozoa clade, this database is appropriate. A high proportion of complete BUSCOs (either single-copy or duplicated) reflects a high-quality and comprehensive transcriptome assembly. Conversely, a larger number of fragmented or missing BUSCOs may indicate incomplete assembly, poor read coverage, or biological factors such as gene loss or divergence.
+
+> <hands-on-title>Running Busco</hands-on-title>
+>
+> 1. **Busco** {% icon tool %} with the following parameters:
+>    - *"Sequence to analyse"*: `transcriptome_raw.fasta`
+>    - *"Mode"*: `transcriptome`
+>    - *"Lineage"*: `eukaryota_odb10`
+> 2. **Rename** the outputs
+>    - `Busco on data XX: short summary` -> `Busco_raw_short_summary`
+>    - `Busco on data XX: full table` -> `Busco_raw_full_table`
+>    - `Busco on data XX: missing buscos` -> `Busco_raw_missing_buscos`
+{: .hands_on}
+
+
+> <question-title></question-title>
+>
+>  What can you say about the transcriptome completeness ?
+>
+> > <solution-title></solution-title>
+> >
+> >  You can click on the visualisation icon {% icon galaxy-eye %} of the short summary :
+> > ```
+> > ***** Results: *****
+> >  C:85.8%[S:72.9%,D:12.9%],F:7.1%,M:7.1%,n:255	   
+> >  	219	Complete BUSCOs (C)			   
+> >  	186	Complete and single-copy BUSCOs (S)	   
+> >  	33	Complete and duplicated BUSCOs (D)	   
+> >  	18	Fragmented BUSCOs (F)			   
+> >  	18	Missing BUSCOs (M)			   
+> >  	255	Total BUSCO groups searched		      
+> > ```
+> > The BUSCO analysis performed on the raw transcriptome assembly of Acanthamoeba castellanii, using the eukaryota_odb10 lineage dataset (255 BUSCO groups), revealed a completeness score of 85.8%. Out of the total BUSCOs searched, 72.9% were identified as complete and single-copy, while 12.9% were complete but duplicated, suggesting either biological redundancy (e.g., isoforms or gene duplications) or assembly artifacts resulting from the de novo process. Additionally, 7.1% of BUSCOs were fragmented, and another 7.1% were completely missing, which remains within acceptable thresholds for a transcriptome assembled without a reference genome. Overall, these results indicate that the assembly captures the majority of conserved eukaryotic genes, providing a solid basis for downstream analyses, despite some redundancy and incompleteness inherent to transcriptome reconstruction from RNA-seq data.
+> >
+> {: .solution}
+{: .question}
 
 <!--## Checking assembly statistics
 
@@ -527,40 +647,24 @@ Ideally, at least ~80% of input RNA-Seq reads are represented by the transcripto
 The remaining unassembled reads likely corresponds to lowly expressed transcripts with insufficient coverage to enable 
 assembly, to low quality or aberrant reads.
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Using Trinity "Align reads and estimate abundance" wrapper</hands-on-title>
 >
 > 1. **Align reads and estimate abundance** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_raw.fasta`
 >    - *"Gene to Transcripts map"*: `Gene_to_transcripts_map_raw`
 >    - *"Paired or Single-end data?"*: `Paired`
->        - *"Left/Forward strand reads"* -> `R1_cleaned_reads`
->        - *"Right/Reverse strand reads"* -> `R2_cleaned_reads`
->        - *"Strand specific data"*: `Yes`
+>        - *"Left/Forward strand reads"* -> in dataset collections {% icon param-collection %}, select `R1_cleaned_reads`
+>        - *"Right/Reverse strand reads"* -> in dataset collections {% icon param-collection %}, select `R2_cleaned_reads`
+>        - *"Strand specific data"*: `No`
+>        - *"Maximum insert size"*: `800`
 >    - *"Abundance estimation method"*: `RSEM`
 >    - *"Alignment method"*: `Bowtie2`
 >    - In *"Additional Options"*:
 >        - *"Trinity assembly?"*: `Yes`
-> 2. **Rename** the 6 `* isoforms counts` :(
->    -  `A1_raw`, `A2_raw`, `A3_raw`, `B1_raw`, `B2_raw`, `B3_raw`.
-> 3. **Rename** output collection 
->    -  `Align reads and estimate abundance on collection XX: isoforms counts` -> `idoforms_counts_raw`
+> 2. **Rename** output collection 
+>    -  `Align reads and estimate abundance on collection XX: genes counts` -> `genes_counts_raw`
+>    -  `Align reads and estimate abundance on collection XX: isoforms counts` -> `isoforms_counts_raw`
 >
->    > <comment-title></comment-title>
->    >
->    > If you check at the Standard Error messages of your outputs. You can get the `Mapping rate`
->    > 1. Click on one dataset
->    > 2. Click on the little **i** icon
->    > 3. Click on *Tool Standard Error:	stderr*
->    > Example for sample A1 :   
->    > ```
->    > 8803 reads; of these:
->    >   8803 (100.00%) were paired; of these:
->    >     4012 (45.58%) aligned concordantly 0 times
->    >     4640 (52.71%) aligned concordantly exactly 1 time
->    >     151 (1.72%) aligned concordantly >1 times
->    > 54.42% overall alignment rate
->    > ```
->    {: .comment}
 >
 >    > <comment-title></comment-title>
 >    >
@@ -568,100 +672,167 @@ assembly, to low quality or aberrant reads.
 >    > - `Trimmomatic on collection XX: unpaired`
 >    > - `Align reads and estimate abundance on *: genes counts`
 >    > - ...
->    > Note that the dataset are just hidden. You can delete them permanently and make some room in the history options (the little wheel icon)
+>    > Note that the dataset are just hidden. You can delete them permanently and make some room in the history options {% icon galaxy-gear %}
 >    {: .comment}
->
->
-{: .hands_on}
-
-## Merge the mapping tables and compute normalizations
-
-> <hands-on-title>Task description</hands-on-title>
->
-> 1. **Build expression matrix** {% icon tool %} with the following parameters:
->    - *"Abundance estimates"*: `isoforms_counts_raw`
->    - *"Gene to transcript correspondance"*: `Gene_to_transcript_raw`
->    - *"Abundance estimation method"*: `RSEM`
->
 {: .hands_on}
 
 > <question-title></question-title>
 >
-> What are the three tables?
+>  What are the mapping rates of the trimmed RNA-seq reads mapped back to the *de novo* assembled transcriptome, and what does this tell us about the quality of the assembly ?
 >
 > > <solution-title></solution-title>
 > >
-> > 1. `estimated RNA-Seq fragment isoform counts (raw counts)`
-> > 2. `matrix of isoform TPM expression values (not cross-sample normalized)`
-> > 3. `matrix of TMM-normalized expression values`
+>    > If you check at the Standard Error messages of your outputs, you can get the `Mapping rate`
+>    > 1. Click on one dataset
+>    > 2. Click on the little {% icon galaxy-info %} 
+>    > 3. Click on *Tool Standard Error:	stderr*
+>    > Example for sample P1-3 :   
+>    > ````
+>    > 604002 reads; of these:
+>    >   604002 (100.00%) were paired; of these:
+>    >     64776 (10.72%) aligned concordantly 0 times
+>    >     382907 (63.39%) aligned concordantly exactly 1 time
+>    >     156319 (25.88%) aligned concordantly >1 times
+>    > 89.28% overall alignment rate
+>    > ````
+>    > Below is a table summarizing the results for all 9 samples: 
+>    >
+>    > | Sample | Total Reads | Overall Alignment Rate | 0× Aligned (%) | 1× Aligned (%) | >1× Aligned (%) |
+>    > |--------|-------------|------------------------|----------------|----------------|------------------|
+>    > | P1-3   | 604,002     | 89.28%                 | 10.72%         | 63.39%         | 25.88%           |
+>    > | P1-2   | 595,892     | 88.88%                 | 11.12%         | 61.78%         | 27.10%           |
+>    > | P1-1   | 615,491     | 89.51%                 | 10.49%         | 65.62%         | 23.89%           |
+>    > | P0-3   | 593,254     | 89.68%                 | 10.32%         | 62.80%         | 26.89%           |
+>    > | P0-2   | 611,204     | 88.65%                 | 11.35%         | 62.50%         | 26.15%           |
+>    > | P0-1   | 594,172     | 88.88%                 | 11.12%         | 65.00%         | 23.88%           |
+>    > | E1-3   | 596,083     | 88.46%                 | 11.54%         | 59.92%         | 28.53%           |
+>    > | E1-2   | 612,196     | 89.24%                 | 10.76%         | 61.92%         | 27.32%           |
+>    > | E1-1   | 599,683     | 88.43%                 | 11.57%         | 61.79%         | 26.63%           |
+>    > ```
+>    > The alignment statistics indicate that 88–90% of trimmed RNA-seq reads map back to the de novo assembled transcriptome, suggesting a high-quality assembly that captures most expressed transcripts. About 60–66% of reads align uniquely, reflecting good transcript specificity, while 23–28% align multiple times, likely due to isoforms or duplicated sequences. Only ~10–11% fail to align, pointing to minor gaps, low expression, or noise. Overall, the results support a comprehensive and biologically representative assembly, with expected redundancy due to transcriptomic complexity.
+>    > 
+> {: .solution}
+{: .question}
+
+## Merge the mapping tables and compute normalizations
+
+This step will combine abundance estimations (produced by 'Align reads and estimate abundance' step) from multiple samples into a single tabular file. 
+This matrix can then be used by 'RNASeq samples quality check for transcript quantification' and 'Differential Expression Analysis using a Trinity assembly' tools.
+
+> <hands-on-title>Using Trinity "Build expression matrix" wrapper</hands-on-title>
+>
+> 1. **Build expression matrix** {% icon tool %} with the following parameters:
+>    - *"Abundance estimates"*: in dataset collections {% icon param-collection %}, select `isoforms_counts_raw`
+>    - *"Gene to transcript correspondance"*: `Gene_to_transcripts_map_raw`
+>    - *"Abundance estimation method"*: `RSEM`
+> 2. **Rename outputs**
+>    - `Build expression matrix on data XX: matrix of isoform TMM-normalized expression values` -> `TMM-normalized_isoform_matrix`
+>    - `Build expression matrix on data XX: matrix of isoform TPM expression values (not cross-sample normalized)` -> `TPM-NON-normalized_isoform_matrix`
+{: .hands_on}
+
+> <question-title></question-title>
+>
+> What are the specific expression matrix files generated ?
+>
+> > <solution-title></solution-title>
+> >
+> > This tool outputs 6 expression matrices at both the gene and isoform levels. Here's what each output represents: 
+> > 
+> > *Gene-level matrices* :
+> > - Raw gene counts: estimated number of RNA-Seq fragments mapped to each gene (estimated RNA-Seq fragment gene counts).
+> > - Gene TPM values (not normalized across samples): Transcript-Per-Million values per gene.
+> > - Gene TMM-normalized values: TPM values normalized using TMM across samples for between-sample comparisons (e.g. PCA, heatmaps, clustering).
+> > 
+> > *Isoform-level matrices* :
+> > - Raw isoform counts: estimated reads/fragments per individual isoform (estimated RNA-Seq fragment isoform counts).
+> > - Isoform TPM values (not normalized across samples): Transcript-Per-Million values per isoform.
+> > - Isoform TMM-normalized values: adjusted isoform-level TPM values normalized using TMM across samples for between-sample comparisons (e.g. PCA, heatmaps, clustering).
 > >
 > {: .solution}
->
 {: .question}
 
 ## Compute contig Ex90N50 statistic and Ex90 transcript count
 
-An alternative to the contig Nx statistic that could be considered more appropriate for transcriptome assembly data is the ExN50 statistic. Here, the N50 statistic is computed as usual but limited to the top most highly expressed genes that represent x% of the total normalized expression data. The gene expression is take as the sum of the transcript isoform expression and the gene length is computed as the expression-weighted mean of isoform lengths.
+The N50 statistic is a common metric used in genome and transcriptome assemblies to assess contiguity. It represents the length N such that 50% of the total assembled sequence length is contained in contigs (or transcripts) of length N or longer.
+In other words, when you sort all contigs by length from longest to shortest, the N50 is the length at which the cumulative sum reaches half of the total assembly size.
 
-In case of Ex90N50, values are computed as usual N50 but limited to the top most highly expressed transcripts that represent 90% of the total normalized expression data. 
+An alternative metric, more appropriate for transcriptome assemblies, is the ExN50 statistic.
 
-> <hands-on-title>Task description</hands-on-title>
+Unlike the traditional N50, the ExN50 focuses on the most highly expressed transcripts. Specifically, it calculates the N50 value but only considering transcripts that cumulatively account for x% of the total normalized expression data (e.g., TPM).
+
+Gene expression is computed as the sum of expression levels of all its transcript isoforms, and gene length is estimated as the expression-weighted average of isoform lengths.
+
+For example, Ex90N50 is the N50 calculated using only the top expressed transcripts that together make up 90% of the total expression, providing a measure of assembly contiguity weighted by transcript abundance.
+
+> <hands-on-title>Using Trinity "Compute contig Ex90N50 statistic and Ex90 transcript count" wrapper</hands-on-title>
 >
 > 1. **Compute contig Ex90N50 statistic and Ex90 transcript count** {% icon tool %} with the following parameters:
->    - *"Expression matrix"*: `Build expression matrix: matrix of TMM-normalized expression values`
+>    - *"Expression matrix"*: `TMM-normalized_isoform_matrix`
 >    - *"Transcripts"*: `transcriptome_raw.fasta`
->
->
 {: .hands_on}
 
-**What we get**
-![N50_toy_dataset](../../images/full-de-novo/N50.PNG)
+**What we get:**
+![N50](../../images/full-de-novo/ExN50_amibe.PNG)
 
-**What we should get with a real dataset**
-![ExN50_plot](../../images/full-de-novo/ExN50_plot.png)
-[(source)](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Transcriptome-Contig-Nx-and-ExN50-stats)
+The ExN50 plot shows that contig length (N50) increases with transcript expression levels, peaking around Ex90 with values near 1800–1900 bp. This indicates that the most highly expressed transcripts are well assembled, a typical pattern for high-quality de novo transcriptome assemblies. The sharp fluctuations at lower expression levels reflect variability in low-abundance transcripts, which are more difficult to assemble reliably. Overall, the plot supports the effectiveness of Trinity in reconstructing the majority of the transcriptome, especially the most biologically relevant, highly expressed transcripts.
 
-
-> ### {% icon comment %} Other options 
-> Other tools have been developped such as [**DETONATE** (Li et al. 2014)](https://github.com/deweylab/detonate), [**TransRate** (Smith-Una et al. 2016)](https://hibberdlab.com/transrate/) or [**rnaQUAST** (Bushmanova et al. 2016)](https://github.com/ablab/rnaquast) to evaluate transcriptome assembly quality.
-> 
+> <comment-title></comment-title>
+> To learn more about Ex90N50 plots, check [Transcriptome-Contig-Nx-and-ExN50-stats page.](https://github.com/trinityrnaseq/trinityrnaseq/wiki/Transcriptome-Contig-Nx-and-ExN50-stats)
 {: .comment}
 
-## Transcriptome annotation completeness with **Busco**
 
-[BUSCO (Benchmarking Universal Single-Copy Orthologs)](https://busco.ezlab.org/) allows a measure for quantitative assessment of genome/transcriptome/proteome based on evolutionarily informed expectations of gene content. 
+> <comment-title></comment-title>
+> Other tools have been developped such as [**DETONATE** (Li et al. 2014)](https://github.com/deweylab/detonate), [**TransRate** (Smith-Una et al. 2016)](https://hibberdlab.com/transrate/) or [**rnaQUAST** (Bushmanova et al. 2016)](https://github.com/ablab/rnaquast) to evaluate transcriptome assembly quality.
+{: .comment}
 
-> <hands-on-title>Task description</hands-on-title>
->
-> 1. **Busco** {% icon tool %} with the following parameters:
->    - *"Sequence to analyse"*: `transcriptome_raw.fasta`
->    - *"Mode"*: `transcriptome`
->    - *"Lineage"*: `eukaryota_odb9`
->
+## Replicates quality assessment
+
+This tool performs quality checks on an RNA-Seq experiment by analyzing abundance estimates across different samples, using a transcriptome assembled with Trinity.
+
+The first step is to create a data frame describing the samples and specifying their corresponding experimental conditions.
+
+> <hands-on-title>Using "Describe samples and replicates"</hands-on-title>
+> 1. **Get exact sample names as writen in the expression matrix**
+>    - Open the `TMM-normalized_isoform_matrix` : click on the eye icon {% icon galaxy-eye %}
+>    - Copy the sample names: P1-3_subsampled_R1_001_fastq_gz ; P1-2_subsampled_R1_001_fastq_gz ; P1-1_subsampled_R1_001_fastq_gz ; P0-3_subsampled_R1_001_fastq_gz ; P0-2_subsampled_R1_001_fastq_gz ; P0-1_subsampled_R1_001_fastq_gz ; E1-3_subsampled_R1_001_fastq_gz ; E1-2_subsampled_R1_001_fastq_gz ; E1-1_subsampled_R1_001_fastq_gz
+> 2. **Describe samples and replicates** {% icon tool %} with the following parameters:
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `P1-1_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `P1`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `P1-2_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `P1`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `P1-3_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `P1`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `P0-1_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `P0`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `P0-2_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `P0`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `P0-3_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `P0`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `E1-1_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `E1`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `E1-2_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `E1`
+>    - {% icon tool %} Insert samples 
+>      - *"Full sample name"*: `E1-3_subsampled_R1_001_fastq_gz`
+>      - *"Condition"*: `E1`
+> 3. **Rename outputs**
+>     - `XX: Describe samples` -> `samples_description`
 {: .hands_on}
 
-
-> ### {% icon question %} Questions
+> <hands-on-title>Using "RNASeq samples quality check for transcripts quantification"</hands-on-title>
 >
->  What can you say about the transcritome completeness ?
->
-> > ### {% icon solution %} Solution
-> >
-> >  You can click on the visualisation icon of the short summary :
-> > ```
-> > ***** Results: *****
-> > 	C:0.4%[S:0.4%,D:0.0%],F:2.4%,M:97.2%,n:255	   
-> > 	1	Complete BUSCOs (C)			   
-> > 	1	Complete and single-copy BUSCOs (S)	   
-> > 	0	Complete and duplicated BUSCOs (D)	   
-> > 	6	Fragmented BUSCOs (F)			   
-> > 	248	Missing BUSCOs (M)			   
-> > 	255	Total BUSCO groups searched		   
-> > ```
-> > With the toy dataset, 97.2% of expected genes are missing in the assembly.
-> {: .solution}
->
-{: .question}
+> 1. **NASeq samples quality check for transcripts quantification** {% icon tool %} with the following parameters:
+>    - *"Expression matrix"*: `TMM-normalized_isoform_matrix`
+>    - *"Samples description"*: `samples_description`
+{: .hands_on}
 
 ## Filter low expression transcripts
 
@@ -672,11 +843,11 @@ Be cautious in filtering transcripts solely based on expression values, as you c
 Ideally, any filtering would consider a combination of expression values and functional annotation data, and filtering is currently 
 more of an art than a science, and again, simply not needed in most circumstances unless you have a very clear objective in doing so.
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Using Trinity "Filter low expression transcripts" wrapper</hands-on-title>
 >
 > 1. **Filter low expression transcripts** {% icon tool %} with the following parameters:
 >    - *"Trinity assembly"*: `transcriptome_raw.fasta`
->    - *"Expression matrix"*: `Build expression matrix: matrix of isoform TPM expression values (not cross-sample normalized)`
+>    - *"Expression matrix"*: `TPM-NON-normalized_isoform_matrix`
 >    - *"Minimum expression level required across any sample"*: `1.0`
 >    - *"Isoform filtering method"*: `Keep all isoforms above a minimum percent of dominant expression`
 >        - *"Minimum percent of dominant isoform expression"*: `1`
@@ -685,7 +856,7 @@ more of an art than a science, and again, simply not needed in most circumstance
 >    >
 >    > If you check at the Standard Error messages of your outputs. You can get the `Retained` rate
 >    > 1. Click on one dataset
->    > 2. Click on the little **i** icon
+>    > 2. Click on the little {% icon galaxy-info %}
 >    > 3. Click on *Tool Standard Error:	stderr*
 >    > ```
 >    > 	Retained 1657 / 1663 = 99.64% of total transcripts.
@@ -694,10 +865,17 @@ more of an art than a science, and again, simply not needed in most circumstance
 >
 > 2. **Rename** the output
 >    - `Filter low expression transcripts on data XX: filtered low expression transcripts` -> `transcriptome_filtered.fasta`
->
 {: .hands_on}
 
-
+We now need to generate a new gene-to-transcript mapping file for the filtered transcriptome, as the original one was generated by Trinity during the raw assembly.
+> <hands-on-title>Task description</hands-on-title>
+>
+> 1. **Generate gene to transcript map** {% icon tool %} with the following parameters:
+>    - *"Trinity assembly"*: `transcriptome_filtered.fasta`
+> 2. **Rename** output:
+>    - `Generate Gene to transcripts map on data XX` : `Gene_to_transcripts_map_filtered`
+>
+{: .hands_on}
 
 <!--## Checking of the assembly statistics after cleaning
 
@@ -724,19 +902,7 @@ more of an art than a science, and again, simply not needed in most circumstance
 # Annotation
 
 To get a robust transcriptome annotation, it is important to annotate the assembled transcripts and derived putative proteins as well.  
-To do so, we will first predict coding regions then perform similarity search on UniprotKB/SwissProt. Then, we can search more precisely for transmembrane domains and protein profiles to refine the annotation. Finally, the results from previous steps can be summarized using Trinotate.  
-
-## Generate gene to transcript map
-
-We first need to generate a gene to transcripts map for the filtered transcriptome.
-> <hands-on-title>Task description</hands-on-title>
->
-> 1. **Generate gene to transcript map** {% icon tool %} with the following parameters:
->    - *"Trinity assembly"*: `transcriptome_filtered.fasta`
-> 2. **Rename** output:
->    - `Generate Gene to transcripts map on data XX` : `Gene_to_transcripts_map_filtered`
->
-{: .hands_on}
+To do so, we will first predict coding regions then perform similarity search on UniprotKB/SwissProt. Then, we can search more precisely for transmembrane domains and protein profiles to refine the annotation. Finally, the results from previous steps can be summarized using Trinotate.
 
 ## Peptide prediction with **TransDecoder**
 
@@ -749,21 +915,22 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 - if a candidate ORF is found fully encapsulated by the coordinates of another candidate ORF, the longest one is reported. However, a single transcript can report multiple ORFs (allowing for operons, chimeras, etc).
 - optional : the putative peptide has a match to a Pfam domain above the noise cutoff score.
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running TransDecoder</hands-on-title>
 >
 > 1. **TransDecoder** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_filtered.fasta`
 >    - *"Minimum protein length"*: `100`
 >    - In *"Training Options"*:
->        - *"Select the training method"*: `Train with the top longest ORFs`
+>        - *"Select the training method"* : `Train with the top longest ORFs`
+>        - *"Number of top longest ORFs"* : `500`
 >
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
 > What are the 4 generated files ?
->
-> > ### {% icon solution %} Solution
+> 
+> > <solution-title></solution-title>
 > >
 > > **gff3** : a file to describe the predicted features in the transcriptome (`gene`, `mRNA`, `exon`,`CDS`,`3'UTR`,`5'UTR`)   
 > > **bed** : feature coordinates file  
@@ -771,7 +938,6 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 > > **pep** : the most important file, which contains the protein sequences corresponding to the predicted coding regions within the transcripts.  
 > > 
 > {: .solution}
->
 {: .question}
 
 ## Similarity search with **BLAST**
@@ -786,7 +952,7 @@ There are several types of BLAST searches, including:
     
 Here, we will use **BLASTp** to search for similarities between the `.pep` protein sequences produces by TransDecoder and the proteins reported in the highly curated database [UniProtKB/SwissProt](https://www.uniprot.org/help/uniprotkb) (one record per gene in one species). Then we will use **BLASTx** to search for similarities between the filtered transcriptome nucleotide and [UniProtKB/SwissProt](https://www.uniprot.org/help/uniprotkb).  
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>`Running BLAST`</hands-on-title>
 >
 > 1. **NCBI BLAST+ blastp** {% icon tool %} with the following parameters:
 >    - *"Protein query sequence(s)"*: `TransDecoder on data XXX: pep`

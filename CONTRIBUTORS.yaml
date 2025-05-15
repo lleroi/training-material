@@ -1906,6 +1906,7 @@ patrick-austin:
 
 paulineauffret:
     name: Pauline Auffret
+    orcid: 0009-0001-3834-7670
     joined: 2022-08
 
 PaulineSGN:
@@ -2686,3 +2687,9 @@ tbrown91:
     email: brown@izw-berlin.de
     orcid: 0000-0001-8293-4816
     joined: 2024-08
+
+cnoel-sebimer:
+    name: Cyril Noël
+    orcid: 0000-0002-7139-4073
+    joined: 2025-05
+
