@@ -14,8 +14,10 @@ objectives:
     - Use Trinity suite and Busco to assess the assembly quality
     - Filter raw transcriptome
     - Use Trinotate to annotate the transcriptome
+    - Use DESeq2 to identify differentially expressed transcripts accross experimental conditions
 time_estimation: 16h
 key_points:
+   - Raw RNA-Seq reads must be cleaned cautiously before used to assemble a transcriptome *de novo*.
    - The generation of a transcriptome *de novo* from RNA-seq reads requires many steps to ensure its quality and accuracy
    - It is an accessible method to study non-model organisms
 contributors:
@@ -28,9 +30,7 @@ contributors:
     - xiliu
     - alexcorm
 
-
 ---
-
 
 
 As a result of the development of novel sequencing technologies, the years between 2008 and 2012 saw a large drop in the cost of sequencing. Per megabase and genome, the cost dropped to 1/100,000th and 1/10,000th of the price, respectively. Prior to this, only transcriptomes of organisms that were of broad interest and utility to scientific research were sequenced; however, these developed in 2010s high-throughput sequencing (also called next-generation sequencing) technologies are both cost- and labor- effective, and the range of organisms studied via these methods is expanding.
@@ -153,10 +153,8 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 {: .question}
 
 > <comment-title></comment-title>
-> >
-> > For an exhaustive review of **fastqc** outputs, check out the [**"Quality control" tutorial**]({% link topics/sequence-analysis/tutorials/quality-control/tutorial.md %}).
-> {: .comment}
-
+> For an exhaustive review of **fastqc** outputs, check out the [**"Quality control" tutorial**]({% link topics/sequence-analysis/tutorials/quality-control/tutorial.md %}).
+{: .comment}
 
 
 Now we can use [**MultiQC** (P. Ewels et al., 2016)](https://multiqc.info/) to aggregate all individual results in one summary page.
@@ -439,7 +437,7 @@ To analyze the mapping results, we will once again use MultiQC on Bowtie2 mappin
 >    - `FastQC on collection XX : RawData` -> `FastQC_R2_cleaned_Raw`
 {: .hands_on}
 
-> <hands-on-title>Running MultiQC on trimmed reads</hands-on-title>
+> <hands-on-title>Running MultiQC on FastQC reports</hands-on-title>
 >
 > 1. **MultiQC** {% icon tool %} with the following parameters:
 >    - In *"Results"*:
@@ -558,7 +556,7 @@ Before running Trinity, **input reads should be high-quality and free of contami
 > [De novo transcriptome assembly: A comprehensive cross-species comparison of short-read RNA-Seq assemblers](https://academic.oup.com/gigascience/article/8/5/giz039/5488105)
 {: .comment}
 
-# Assembly assessment / cleaning
+# Assembly assessment / cleaning (120 minutes)
 
 The *de novo* transcriptome assembly needs to be evaluated before any further downstream analyses in order to check if it reaches sufficient quality criteria. We generally use 3 criteria to perform such analysis:
 - **Completeness** according to conserved ortholog content.
@@ -682,35 +680,36 @@ assembly, to low quality or aberrant reads.
 >
 > > <solution-title></solution-title>
 > >
->    > If you check at the Standard Error messages of your outputs, you can get the `Mapping rate`
+> > If you check at the Standard Error messages of your outputs, you can get the `Mapping rate`
 >    > 1. Click on one dataset
 >    > 2. Click on the little {% icon galaxy-info %} 
 >    > 3. Click on *Tool Standard Error:	stderr*
->    > Example for sample P1-3 :   
->    > ````
->    > 604002 reads; of these:
->    >   604002 (100.00%) were paired; of these:
->    >     64776 (10.72%) aligned concordantly 0 times
->    >     382907 (63.39%) aligned concordantly exactly 1 time
->    >     156319 (25.88%) aligned concordantly >1 times
->    > 89.28% overall alignment rate
->    > ````
->    > Below is a table summarizing the results for all 9 samples: 
->    >
->    > | Sample | Total Reads | Overall Alignment Rate | 0× Aligned (%) | 1× Aligned (%) | >1× Aligned (%) |
->    > |--------|-------------|------------------------|----------------|----------------|------------------|
->    > | P1-3   | 604,002     | 89.28%                 | 10.72%         | 63.39%         | 25.88%           |
->    > | P1-2   | 595,892     | 88.88%                 | 11.12%         | 61.78%         | 27.10%           |
->    > | P1-1   | 615,491     | 89.51%                 | 10.49%         | 65.62%         | 23.89%           |
->    > | P0-3   | 593,254     | 89.68%                 | 10.32%         | 62.80%         | 26.89%           |
->    > | P0-2   | 611,204     | 88.65%                 | 11.35%         | 62.50%         | 26.15%           |
->    > | P0-1   | 594,172     | 88.88%                 | 11.12%         | 65.00%         | 23.88%           |
->    > | E1-3   | 596,083     | 88.46%                 | 11.54%         | 59.92%         | 28.53%           |
->    > | E1-2   | 612,196     | 89.24%                 | 10.76%         | 61.92%         | 27.32%           |
->    > | E1-1   | 599,683     | 88.43%                 | 11.57%         | 61.79%         | 26.63%           |
->    > ```
->    > The alignment statistics indicate that 88–90% of trimmed RNA-seq reads map back to the de novo assembled transcriptome, suggesting a high-quality assembly that captures most expressed transcripts. About 60–66% of reads align uniquely, reflecting good transcript specificity, while 23–28% align multiple times, likely due to isoforms or duplicated sequences. Only ~10–11% fail to align, pointing to minor gaps, low expression, or noise. Overall, the results support a comprehensive and biologically representative assembly, with expected redundancy due to transcriptomic complexity.
->    > 
+> > Example for sample P1-3 :   
+> > ```
+> > 604002 reads; of these:
+> >   604002 (100.00%) were paired; of these:
+> >     64776 (10.72%) aligned concordantly 0 times
+> >     382907 (63.39%) aligned concordantly exactly 1 time
+> >     156319 (25.88%) aligned concordantly >1 times
+> > 89.28% overall alignment rate
+> > ```
+> > 
+> > Below is a table summarizing the results for all 9 samples:
+> > 
+> >  | Sample | Total Reads | Overall Alignment Rate | 0× Aligned (%) | 1× Aligned (%) | >1× Aligned (%) |
+> >  |--------|-------------|------------------------|----------------|----------------|------------------|
+> >  | P1-3   | 604,002     | 89.28%                 | 10.72%         | 63.39%         | 25.88%           |
+> >  | P1-2   | 595,892     | 88.88%                 | 11.12%         | 61.78%         | 27.10%           |
+> >  | P1-1   | 615,491     | 89.51%                 | 10.49%         | 65.62%         | 23.89%           |
+> >  | P0-3   | 593,254     | 89.68%                 | 10.32%         | 62.80%         | 26.89%           |
+> >  | P0-2   | 611,204     | 88.65%                 | 11.35%         | 62.50%         | 26.15%           |
+> >  | P0-1   | 594,172     | 88.88%                 | 11.12%         | 65.00%         | 23.88%           |
+> >  | E1-3   | 596,083     | 88.46%                 | 11.54%         | 59.92%         | 28.53%           |
+> >  | E1-2   | 612,196     | 89.24%                 | 10.76%         | 61.92%         | 27.32%           |
+> >  | E1-1   | 599,683     | 88.43%                 | 11.57%         | 61.79%         | 26.63%           |
+> > 
+> > The alignment statistics indicate that 88–90% of trimmed RNA-seq reads map back to the de novo assembled transcriptome, suggesting a high-quality assembly that captures most expressed transcripts. About 60–66% of reads align uniquely, reflecting good transcript specificity, while 23–28% align multiple times, likely due to isoforms or duplicated sequences. Only ~10–11% fail to align, pointing to minor gaps, low expression, or noise. Overall, the results support a comprehensive and biologically representative assembly, with expected redundancy due to transcriptomic complexity.
+> > 
 > {: .solution}
 {: .question}
 
@@ -788,6 +787,11 @@ The ExN50 plot shows that contig length (N50) increases with transcript expressi
 ## Replicates quality assessment
 
 This tool performs quality checks on an RNA-Seq experiment by analyzing abundance estimates across different samples, using a transcriptome assembled with Trinity.
+It's good to examine the data to ensure that biological replicates are well correlated, and also to investigate relationships among samples.
+
+If there are any obvious discrepancies among sample and replicate relationships such as due to accidental 
+mis-labeling of sample replicates, or strong outliers or batch effects, we want to identify them before 
+proceeding to subsequent data analyses (such as differential expression).
 
 The first step is to create a data frame describing the samples and specifying their corresponding experimental conditions.
 
@@ -826,13 +830,33 @@ The first step is to create a data frame describing the samples and specifying t
 > 3. **Rename outputs**
 >     - `XX: Describe samples` -> `samples_description`
 {: .hands_on}
-
+**What we get:**
+![describe_samples](../../images/full-de-novo/describe_samples.PNG)
+>    
 > <hands-on-title>Using "RNASeq samples quality check for transcripts quantification"</hands-on-title>
 >
 > 1. **NASeq samples quality check for transcripts quantification** {% icon tool %} with the following parameters:
 >    - *"Expression matrix"*: `TMM-normalized_isoform_matrix`
 >    - *"Samples description"*: `samples_description`
 {: .hands_on}
+**What we get:**
+The tool outputs here 5 files, among which:
+- **Replicate Pearson correlation heatmap** : `input.matrix.CPM.log2.sample_cor_matrix.pdf` The heatmap gives an overview of similarities and dissimilarities between samples: the color represents the distance between the samples.
+![heatmap](../../images/full-de-novo/heatmap_samples_QC.PNG)
+About the Heatmap:
+   - Samples cluster tightly within their respective experimental groups (P0, P1, E1).
+   - No clear outliers were detected.
+   - The hierarchical clustering confirms distinct separation between the experimental conditions.
+
+- **Principal Component Analysis (PCA)** : `input.matrix.CPM.log2.prcomp.principal_components.pdf`.  It shows the samples in the 2D plane spanned by their first two principal components. Each replicate is plotted as an individual data point. This type of plot is useful for visualizing the overall effect of experimental covariates and batch effects.
+![PCA](../../images/full-de-novo/PCA_samples_QC.PNG)
+About the PCA:
+   - PC1 explains the majority of the variance (79.81%) and clearly separates E1 from the other groups. 
+   - PC2 and PC3 further distinguish P1 from P0. 
+   - Replicates cluster closely, showing sample consistency and proper grouping.
+
+Conclusion:
+The quality control results indicate high consistency within replicates and clear biological separation between conditions.
 
 ## Filter low expression transcripts
 
@@ -858,8 +882,9 @@ more of an art than a science, and again, simply not needed in most circumstance
 >    > 1. Click on one dataset
 >    > 2. Click on the little {% icon galaxy-info %}
 >    > 3. Click on *Tool Standard Error:	stderr*
+>    > At the end of the file you should see:
 >    > ```
->    > 	Retained 1657 / 1663 = 99.64% of total transcripts.
+>    > 	Retained 28485 / 28724 = 99.17% of total transcripts.
 >    > ```
 >    {: .comment}
 >
@@ -868,13 +893,12 @@ more of an art than a science, and again, simply not needed in most circumstance
 {: .hands_on}
 
 We now need to generate a new gene-to-transcript mapping file for the filtered transcriptome, as the original one was generated by Trinity during the raw assembly.
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running Trinity "Generate gene to transcript map" wrapper</hands-on-title>
 >
 > 1. **Generate gene to transcript map** {% icon tool %} with the following parameters:
 >    - *"Trinity assembly"*: `transcriptome_filtered.fasta`
 > 2. **Rename** output:
 >    - `Generate Gene to transcripts map on data XX` : `Gene_to_transcripts_map_filtered`
->
 {: .hands_on}
 
 <!--## Checking of the assembly statistics after cleaning
@@ -899,7 +923,7 @@ We now need to generate a new gene-to-transcript mapping file for the filtered t
 {: .question}
 -->
 
-# Annotation
+# Annotation (120 minutes)
 
 To get a robust transcriptome annotation, it is important to annotate the assembled transcripts and derived putative proteins as well.  
 To do so, we will first predict coding regions then perform similarity search on UniprotKB/SwissProt. Then, we can search more precisely for transmembrane domains and protein profiles to refine the annotation. Finally, the results from previous steps can be summarized using Trinotate.
@@ -923,7 +947,11 @@ TransDecoder identifies likely coding sequences based on the following criteria:
 >    - In *"Training Options"*:
 >        - *"Select the training method"* : `Train with the top longest ORFs`
 >        - *"Number of top longest ORFs"* : `500`
->
+> 2. **Rename outputs**
+>    - `TransDecoder on data XXX: gff3` -> `TransDecoder_predicted_features_gff3`
+>    - `TransDecoder on data XXX: bed` -> `TransDecoder_predicted_bed`
+>    - `TransDecoder on data XXX: cds` -> `TransDecoder_predicted_cds`
+>    - `TransDecoder on data XXX: pep` -> `TransDecoder_predicted_proteins`
 {: .hands_on}
 
 > <question-title></question-title>
@@ -952,39 +980,43 @@ There are several types of BLAST searches, including:
     
 Here, we will use **BLASTp** to search for similarities between the `.pep` protein sequences produces by TransDecoder and the proteins reported in the highly curated database [UniProtKB/SwissProt](https://www.uniprot.org/help/uniprotkb) (one record per gene in one species). Then we will use **BLASTx** to search for similarities between the filtered transcriptome nucleotide and [UniProtKB/SwissProt](https://www.uniprot.org/help/uniprotkb).  
 
-> <hands-on-title>`Running BLAST`</hands-on-title>
+> <hands-on-title>Running BLAST</hands-on-title>
 >
 > 1. **NCBI BLAST+ blastp** {% icon tool %} with the following parameters:
->    - *"Protein query sequence(s)"*: `TransDecoder on data XXX: pep`
+>    - *"Protein query sequence(s)"*: `TransDecoder_predicted_proteins`
 >    - *"Subject database/sequences"*: `Locally installed general BLAST database`
->    - *"Protein BLAST database"*: `UniprotKB/Swissprot`
+>    - *"Protein BLAST database"*: `UniprotKB/Swissprot databank`
 >    - *"Type of BLAST"*: `Traditional BLASTP`
 >    - *"Set expectation value cutoff"*: `0.001`
+>    - *"Output format"*: `Tabular (extended 25 columns)`
 > 2. **NCBI BLAST+ blastx** {% icon tool %} with the following parameters:
 >    - *"Nucleotide query sequence(s)"*: `transcriptome_filtered.fasta`
 >    - *"Subject database/sequences"*: `Locally installed general BLAST database`
->    - *"Protein BLAST database"*: `UniprotKB/Swissprot`
+>    - *"Protein BLAST database"*: `UniprotKB/Swissprot databank`
 >    - *"Query genetic code"*: `Standard`
 >    - *"Type of BLAST"*: `Traditional BLASTX`
 >    - *"Set expectation value cutoff"*: `0.001`
+>    - *"Output format"*: `Tabular (extended 25 columns)`
 > 3. **Rename** the BLASTP output
 >    - `blastp on data XXX` -> `blastp`
 > 4. **Rename** the BLASTX output
 >    - `blastx on data XXX` -> `blastx`
->
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <comment-title></comment-title>
+> UniProtKB/Swiss-Prot is the manually curated section of the UniProt database, providing high-quality, reviewed protein sequences with detailed functional annotations. It offers accurate and reliable information, making it a key resource for protein research.
+{: .comment}
+
+> <question-title></question-title>
 >
 > What are the different columns in the resulting tab ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
 > > ![BLAST_col1](../../images/full-de-novo/blast_columns_desc.PNG) 
 > > ![BLAST_col2](../../images/full-de-novo/blast_columns_desc2.PNG) 
 > > 
 > {: .solution}
->
 {: .question}
 <!--
 ## Find signal peptides
@@ -1001,19 +1033,18 @@ Here, we will use **BLASTp** to search for similarities between the `.pep` prote
 
 [**TMHMM** (Krogh et al, 2001)](https://services.healthtech.dtu.dk/service.php?TMHMM-2.0) predicts transmembrane helices from single sequence based on a hidden Markov model. The prediction gives the most probable location and orientation of transmembrane helices in the sequence. It is found by an algorithm called N-best (or 1-best in this case) that sums over all paths through the model with the same location and direction of the helices. 
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running TMHMM 2.0</hands-on-title>
 >
 > 1. **TMHMM 2.0** {% icon tool %} with the following parameters:
->    - *"FASTA file of protein sequences"*: `TransDecoder on data XXX: pep`
->
+>    - *"FASTA file of protein sequences"*: `TransDecoder_predicted_proteins` 
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
 > 1. What are the different columns in the resulting tab ?
 > 2. What does a Topology of `i` and `o` mean ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
 > > 1. Each line starts with the sequence identifier and then these fields:  
 > >    - `len`: the length of the protein sequence.  
@@ -1027,7 +1058,6 @@ Here, we will use **BLASTp** to search for similarities between the `.pep` prote
 > > 2. If the whole sequence is labeled as inside (i) or outside (o), the prediction is that it contains no membrane helices.  
 > > 
 > {: .solution}
->
 {: .question}
 
 ## Search again profile database with **HMMscan** (HMMER)
@@ -1041,15 +1071,31 @@ Proteins are generally composed of one or more functional regions, commonly term
 Pfam also generates higher-level groupings of related entries, known as clans. A clan is a collection of Pfam entries which are related by similarity of sequence, structure or profile-HMM.
 The data presented for each entry is based on the UniProt Reference Proteomes but information on individual UniProtKB sequences can still be found by entering the protein accession. Pfam full alignments are available from searching a variety of databases, either to provide different accessions (e.g. all UniProt and NCBI GI) or different levels of redundancy. 
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running HMMscan</hands-on-title>
 >
 > 1. **hmmscan** {% icon tool %} with the following parameters:
 >    - *"Use a built-in HMM model database"*
 >    - *"Select a HMM model database"*: `Pfam-A`
->    - *"Sequence file"*: `TransDecoder on data XXX: pep`
+>    - *"Sequence file"*: `TransDecoder_predicted_proteins`
 >    - *Other options*: default
->
+> 2. *Rename output*
+>    - `HMMSCAN on data XX: per-sequence hits from HMM matches` -> `HMMSCAN_per-sequence_hits`
+>    - `HMMSCAN on data XX: per-domain hits from HMM matches` -> `HMMSCAN_per-domain_hits`
+>    - `HMMSCAN on data XX: per-sequence/per-domain hits from HMM matches` -> `HMMSCAN_per-sequence_per-domain_hits`
 {: .hands_on}
+
+> <question-title></question-title>
+>
+> What are the generated files ?
+> 
+> > <solution-title></solution-title>
+> > When running HMMSCAN in Galaxy, three types of output files are typically generated:
+> > - *Per-sequence hits*: This file summarizes which HMM profiles matched each input sequence. It provides one line per sequence, listing the best domain hits with overall E-values and scores. It's useful for quickly identifying which sequences have significant matches to known protein families.
+> > - *Per-domain hits*: This file gives detailed information for each domain match, including multiple domains found in a single sequence. It includes start/end positions, domain scores, and individual E-values. It’s useful for analyzing domain architecture within proteins.
+> > - *Per-sequence/per-domain hits*: This file combines the two above, showing both sequence-level and domain-level details in one table. It's a comprehensive format, often used for downstream functional annotation or filtering.
+> > 
+> {: .solution}
+{: .question}
 
 ## Transcriptome annotation using **Trinotate**
 
@@ -1057,36 +1103,32 @@ The data presented for each entry is based on the UniProt Reference Proteomes bu
 
 [**Trinotate**](https://github.com/Trinotate/Trinotate.github.io/blob/master/index.asciidoc) is a comprehensive annotation suite designed for automatic functional annotation of transcriptomes, particularly de novo assembled transcriptomes, from model or non-model organisms. Trinotate makes use of a number of different well referenced methods for functional annotation including homology search to known sequence data (BLAST+/SwissProt), protein domain identification (HMMER/PFAM), protein signal peptide and transmembrane domain prediction (signalP/tmHMM), and leveraging various annotation databases (eggNOG/GO/Kegg databases). All functional annotation data derived from the analysis of transcripts is integrated into a SQLite database which allows fast efficient searching for terms with specific qualities related to a desired scientific hypothesis or a means to create a whole annotation report for a transcriptome.
 
-
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running Trinotate</hands-on-title>
 >
 > 1. **Trinotate** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_filtered.fasta`
->    - *"Peptides"*: `TransDecoder on data XXX: pep`
+>    - *"Peptides"*: `TransDecoder_predicted_proteins`
 >    - *"Genes to transcripts map"*: `Gene_to_transcripts_map_filtered`
 >    - *"BLASTP: Peptides vs Uniprot.SwissProt"*: `blastp`
 >    - *"BLASTX: Transcripts vs Uniprot.SwissProt"*: `blastx`
->    - *"HMMER hmmscan: Peptides vs PFAM"*: `HMMSCAN on data XX: per_domain hits from HMM matches`
+>    - *"HMMER hmmscan: Peptides vs PFAM"*: `HMMSCAN_per-domain_hits`
 >    - *"TMHMM on Peptides"*: `TMHMM results`
->    - *"Let Galaxy downloading the Trinotate Pre-generated Resource SQLite database"*: `Yes`
->
+>    - *"SignalP on Peptides"*: Nothing selected
 {: .hands_on}
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
+> 1. What are the different columns in the resulting tab ?
+> 2. What can we say about the transcriptome annotation ?
 >
-> What are the different columns in the resulting tab ?
->
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > >
 > > ![Trinotate_scheme](../../images/full-de-novo/trinotate_columns.PNG)
 > > 
 > {: .solution}
->
 {: .question}
 
-> ### {% icon comment %} Other options 
+> <comment-title></comment-title>
 > To get more functional annotations, we can also use [**SignalP** (Nielsen et al. 2017)](https://services.healthtech.dtu.dk/service.php?SignalP) to predict the presence of signal peptides and the location of their cleavage sites in protein. There are also some alternatives to Trinotate to annotate a transcriptome, such as [**Blast2Go**](https://www.blast2go.com/), [**FunctionAnnotator** (Chen et al. 2017)](https://www.nature.com/articles/s41598-017-10952-4)...
-> 
 {: .comment}
 
 ## Generate Super Transcripts
@@ -1095,122 +1137,104 @@ This analysis perform aligments of all the different isoforms per gene. This res
 
 ![SuperTranscript](../../images/full-de-novo/super-transcript.PNG)
 
-> ### {% icon hands_on %} Hands-on: Task description
+> <hands-on-title>Running Trinity "Generate Super Transcripts" wrapper</hands-on-title>
 >
 > 1. **Generate SuperTranscripts** {% icon tool %} with the following parameters:
->    - *"Trinity assembly"* : `transcriptome_filtered_fasta`
->
+>    - *"Trinity assembly"* : `transcriptome_filtered.fasta`
 {: .hands_on}
 
-# Differential Expression (DE) Analysis
+> <question-title></question-title>
+>
+> What are the generated outputs ?
+> 
+> > <solution-title></solution-title>
+> > The Generate SuperTranscripts tool produces a linear representation of all isoforms for each gene, merging them into a single, comprehensive transcript per gene. 
+> > - *SuperTranscrits sequences*: FASTA file containing one SuperTranscript per gene.
+> > - *SuperTranscrits structure annotation*: GTF file describing the exon structure of each isoform mapped onto the SuperTranscript.
+> > - *multiple alignment of SuperTranscrits*: Mapping file linking original Trinity transcripts to their corresponding SuperTranscripts.
+> > 
+> {: .solution}
+{: .question}
+
+# Differential Expression (DE) Analysis (120 minutes)
 
 ## Remapping on the filtered transcriptome
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running Trinity "Align reads and estimate abundance" wrapper</hands-on-title>
 >
 > 1. **Align reads and estimate abundance** {% icon tool %} with the following parameters:
 >    - *"Transcripts"*: `transcriptome_filtered.fasta`
 >    - *"Gene to Transcripts map"*: `Gene_to_transcripts_map_filtered`
->    - *"Paired or Single-end data?"*: `Paired`
->        - *"Left/Forward strand reads"* -> `R1_cleaned_reads`
->        - *"Right/Reverse strand reads"* -> `R2_cleaned_reads`
->        - *"Strand specific data"*: `Yes`
->    - *"Abundance estimation method"*: `RSEM`
->    - *"Alignment method"*: `Bowtie2`
->    - In *"Additional Options"*:
->        - *"Trinity assembly?"*: `Yes`
-> 2. **Rename** the 6 `* isoforms counts` :(
->    -  `A1`, `A2`, `A3`, `B1`, `B2`, `B3`.
-> 3. **Rename** output collection 
->    -  `Align reads and estimate abundance on collection XX: isoforms counts` -> `idoforms_counts_filtered`
->
->
->    > <comment-title></comment-title>
->    >
->    > If you check at the Standard Error messages of your outputs. You can get the `Mapping rate`
->    > 1. Click on one dataset
->    > 2. Click on the little **i** icon
->    > 3. Click on *Tool Standard Error:	stderr*
->    > Example for sample A1 :   
->    > ```
->    > 8803 reads; of these:
->    >   8803 (100.00%) were paired; of these:
->    >     4012 (45.58%) aligned concordantly 0 times
->    >     4640 (52.71%) aligned concordantly exactly 1 time
->    >     151 (1.72%) aligned concordantly >1 times
->    > 54.42% overall alignment rate
->    > ```
->    {: .comment}
->    >
+>    -  *"Paired or Single-end data?"*: `Paired`
+>    - *"Left/Forward strand reads"* -> in dataset collections {% icon param-collection %}, select `R1_cleaned_reads`
+>   - *"Right/Reverse strand reads"* -> in dataset collections {% icon param-collection %}, select `R2_cleaned_reads`
+>   - *"Strand specific data"*: `No`
+>   - *"Maximum insert size"*: `800`
+>   - *"Abundance estimation method"*: `RSEM`
+>   - *"Alignment method"*: `Bowtie2`
+>   - In *"Additional Options"*:
+>     - *"Trinity assembly?"*: `Yes`
+> 2. **Rename** output collection 
+>    -  `Align reads and estimate abundance on collection XX: genes counts` -> `genes_counts_filtered`
+>    -  `Align reads and estimate abundance on collection XX: isoforms counts` -> `isoforms_counts_filtered`
 >
 {: .hands_on}
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
 > Do you expect the mapping rate on filtered transcriptome to be better than the mapping rate on raw transcriptome ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
+> > If you check at the Standard Error messages of your outputs, you can get the `Mapping rate`
+> > 1. Click on one dataset
+> > 2. Click on the little {% icon galaxy-info %} 
+> > 3. Click on *Tool Standard Error:	stderr*
+> > Example for sample P1-3 :   
+> > ````
+> > 604002 reads; of these:
+> > 604002 (100.00%) were paired; of these:
+> >     64785 (10.73%) aligned concordantly 0 times
+> >     384860 (63.72%) aligned concordantly exactly 1 time
+> >     154357 (25.56%) aligned concordantly >1 times
+> > 89.27% overall alignment rate
+> > ````
+> > Below is a table summarizing the results for all 9 samples (combined with the results of mapping to raw transcriptome): 
+> >
+> >
+> >| Sample | Total Reads | Overall Alignment Rate (Raw) | 0× Aligned (%) | 1× Aligned (%) | >1× Aligned (%) | Overall Alignment Rate (Filtered) | 0× Aligned (%) | 1× Aligned (%) | >1× Aligned (%) |
+> >|--------|-------------|------------------------------|----------------|----------------|------------------|------------------------------------|----------------|----------------|------------------|
+> >| P1-3   | 604,002     | 89.28%                       | 10.72%         | 63.39%         | 25.88%           | 89.27%                             | 10.73%         | 63.72%         | 25.56%           |
+> >| P1-2   | 595,892     | 88.88%                       | 11.12%         | 61.78%         | 27.10%           | 88.88%                             | 11.12%         | 62.17%         | 26.71%           |
+> >| P1-1   | 615,491     | 89.51%                       | 10.49%         | 65.62%         | 23.89%           | 89.51%                             | 10.49%         | 65.98%         | 23.53%           |
+> >| P0-3   | 593,254     | 89.68%                       | 10.32%         | 62.80%         | 26.89%           | 89.68%                             | 10.32%         | 63.13%         | 26.55%           |
+> >| P0-2   | 611,204     | 88.65%                       | 11.35%         | 62.50%         | 26.15%           | 88.65%                             | 11.35%         | 62.90%         | 25.75%           |
+> >| P0-1   | 594,172     | 88.88%                       | 11.12%         | 65.00%         | 23.88%           | 88.88%                             | 11.12%         | 65.34%         | 23.54%           |
+> >| E1-3   | 596,083     | 88.46%                       | 11.54%         | 59.92%         | 28.53%           | 88.45%                             | 11.55%         | 60.30%         | 28.16%           |
+> >| E1-2   | 612,196     | 89.24%                       | 10.76%         | 61.92%         | 27.32%           | 89.24%                             | 10.76%         | 62.20%         | 27.04%           |
+> >| E1-1   | 599,683     | 88.43%                       | 11.57%         | 61.79%         | 26.63%           | 88.42%                             | 11.58%         | 62.10%         | 26.33%           |
 > >
 > > The low expressed transcripts were discarded so it should not impact much the mapping rate. However on large dataset, the mapping should be faster.
 > > 
 > {: .solution}
->
 {: .question}
-
 
 
 ## Merge the mapping tables and compute a TMM normalization
 
 Unlike quality filter step, DE analysis requires to provide for each factor, counts of samples in each category.
-After matrix creation, we will create a design sample file that will describe the experiment and the comparison we want.
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running Build Expression Matrix</hands-on-title>
 >
 > 1. **Build expression matrix** {% icon tool %} with the following parameters:
->    - *"Abundance estimates"*: `isoforms_counts_filtered`
+>    - *"Abundance estimates"*: in dataset collections {% icon param-collection %}, select `isoforms_counts_filtered`
 >    - *"Gene to transcript correspondance"*: `Gene_to _transcripts_map_filtered`
 >    - *"Abundance estimation method"*: `RSEM`
->    - *"Cross sample normalization"*: `TMM`
-> 2. **Describe samples**  {% icon tool %} with the following parameters:
->    - *"Samples"*
->        - *"1: Samples"*:
->            - *"Full sample name"*: `A1`
->            - *"Condition"*: `Force-feeding`
->        - *"2: Samples"*:
->            - *"Full sample name"*: `A2`
->            - *"Condition"*: `Force-feeding`
->        - ...
->        - *"6: Samples"*:
->            - *"Full sample name"*: `B3`
->            - *"Condition"*: `Control`  
->
-> ![desc_samples](../../images/full-de-novo/desc_samples.PNG)
->
+>    - *In "Additional Options"*:
+>        - *"Cross sample normalization"*: `TMM`
+> > 2. **Rename outputs**
+>    - `Build expression matrix on data XX: matrix of isoform TMM-normalized expression values` -> `filtered_TMM-normalized_isoform_matrix`
+>    - `Build expression matrix on data XX: matrix of isoform TPM expression values (not cross-sample normalized)` -> `filtered_TPM-NON-normalized_isoform_matrix`
+>    - `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)` -> `filtered_fragment_isoform_counts_raw_counts`
 {: .hands_on}
-
-## RNASeq samples quality check
-
-Once we've performed transcript quantification for each biological replicates, it's good to examine 
-the data to ensure that biological replicates are well correlated, and also to investigate relationships among samples.
-
-If there are any obvious discrepancies among sample and replicate relationships such as due to accidental 
-mis-labeling of sample replicates, or strong outliers or batch effects, we want to identify them before 
-proceeding to subsequent data analyses (such as differential expression).
-
-> <hands-on-title>Task description</hands-on-title>
-> 1. **RNASeq samples quality check** {% icon tool %} with the following parameters:
->    - *"Expression matrix"*: `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)`
->    - *"Samples description"*: `Describe samples`
->
-{: .hands_on}
-
-**RNASeq samples quality check** generated 4 outputs (PDF) :
-
-- **Pairwise comparisons and MA plots of control (B) replicates** :`Control.rep_compare.pdf`. Data points more than 2-fold different are highlighted in red (log(CPM) values (for pairwise comparison : x-axis: mean log(CPM), for MA plots : y-axis log(fold_change)).
-- **Pairwise comparisons and MA plots of force-feeding (A) replicates** :`Force-feeding.rep_compare.pdf`. Data points more than 2-fold different are highlighted in red (log(CPM) values (for pairwise comparison : x-axis: mean log(CPM), for MA plots : y-axis log(fold_change)). 
-- **Replicate Pearson correlation heatmap** : `input.matric.CPM.log2.sample_cor_matrix.pdf` The heatmap gives an overview of similarities and dissimilarities between samples: the color represents the distance between the samples.
-- **Principal Component Analysis (PCA)** : `input.matric.CPM.log2.prcomp.principal_componenents.pdf`.  It shows the samples in the 2D plane spanned by their first two principal components. Each replicate is plotted as an individual data point. This type of plot is useful for visualizing the overall effect of experimental covariates and batch effects.
-
-![RNASeq samples quality check Graphs](../../images/full-de-novo/rnaseq_samples_quality_check.png)
 
 ## Differential expression analysis
 
@@ -1228,25 +1252,27 @@ that are absolutely essential for accurate results.
 For your own analysis, we advise you to use at least 3, but preferably 5 biological replicates per condition. 
 It is possible to have different numbers of replicates per condition.
 
-> <hands-on-title>Task description</hands-on-title>
-> 1. **Differential expression analysis** {% icon tool %} with the following parameters:
->    - *"Expression matrix"*: `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)`
->    - *"Sample description"*: `Describe samples` (the last one)
+> <hands-on-title>Running Differential expression analysis</hands-on-title>
+> 1. **Differential expression analysis using a Trinity assembly** {% icon tool %} with the following parameters:
+>    - *"Expression matrix"*: `filtered_TMM-normalized_isoform_matrix`
+>    - *"Sample description"*: `samples_description`
 >    - *"Differential analysis method"*: `DESeq2`
+> 2. **Rename outputs**
+>    - `Differential expression results on data XX`-> `DESeq2_count_matrices`
 >
 {: .hands_on}
 
 **Differential expression analysis** generated 3 outputs (PDF) :
-- **Differential expression Data table** : `Differential expression results on data XX` ; `input.matrix.Control_vs_Force-feeding.DESeq2`. For each gene, the statistics of diffferential expression testing are reported. We will focus on `log2FoldChange` and `padj`.
-- **MA and volcano plots** : `Differential expression plots on data XX` ; `input.matrix.Control_vs_Force-feeding.DESeq2.DE_results.MA_n_Volcano`. Volcano plots are commonly used to display the results of RNA-seq or other omics experiments. A volcano plot is a type of scatterplot that shows statistical significance (P value) versus magnitude of change (fold change). It enables quick visual identification of genes with large fold changes that are also statistically significant. These may be the most biologically significant genes. In a volcano plot, the most upregulated genes are towards the right, the most downregulated genes are towards the left, and the most statistically significant genes are towards the top. MA plots represents log intensity ratio (M) versus mean log intensities (A).
-- **Counts matrices** : `Count matrices generated for differential expression on data XX` ; `input.matrix.Control_vs_Force-feeding.DESeq2`
+- **Differential expression Data table** : `Differential expression results on data XX` : `input.matrix.E1_vs_P0.DESeq2` ; `input.matrix.E1_vs_P1.DESeq2` ; `input.matrix.P0_vs_P1.DESeq2`. For each gene, the statistics of differential expression testing are reported. We will focus on `log2FoldChange` and `padj`.
+- **MA and volcano plots** : `Differential expression plots on data XX` ; `input.matrix.E1_vs_P0.DESeq2.DE_results.MA_n_Volcano` ; `input.matrix.E1_vs_P1.DESeq2.DE_results.MA_n_Volcano` ; `input.matrix.P0_vs_P1.DESeq2.DE_results.MA_n_Volcano`. Volcano plots are commonly used to display the results of RNA-seq or other omics experiments. A volcano plot is a type of scatterplot that shows statistical significance (P value) versus magnitude of change (fold change). It enables quick visual identification of genes with large fold changes that are also statistically significant. These may be the most biologically significant genes. In a volcano plot, the most upregulated genes are towards the right, the most downregulated genes are towards the left, and the most statistically significant genes are towards the top. MA plots represents log intensity ratio (M) versus mean log intensities (A).
+- **Counts matrices** : `input.matrix.E1_vs_P0.DESeq2` ; `input.matrix.E1_vs_P1.DESeq2` ; `input.matrix.P0_vs_P1.DESeq2`
 
-> ### {% icon question %} Questions
+> <question-title></question-title>
 >
 > 1. What are the different columns in the DE data table ?
 > 2. What can you say about the DE analysis results ?
 >
-> > ### {% icon solution %} Solution
+> > <solution-title></solution-title>
 > > - `baseMean` : The average of the normalized count values, dividing by size factors, taken over all samples.  
 > > - `log2FoldChange` : The effect size estimate. This value indicates how much the gene or transcript's expression seems to have changed between the comparison and control groups. This value is reported on a logarithmic scale to base 2.  
 > > - `lfcSE` : The standard error estimate for the log2 fold change estimate.  
@@ -1255,43 +1281,98 @@ It is possible to have different numbers of replicates per condition.
 > > - `padj` : Adjusted P-value for multiple testing for the gene or transcript.	  
 > > 
 > {: .solution}
->
 {: .question}
+
+**What we get:**
+For E1 condition versus P1 condition:
+![MA_plot_E1_vs_P1](../../images/full-de-novo/MA_plot_E1_vs_P1.PNG)
+![volcano_plot_E1_vs_P1](../../images/full-de-novo/volcano_plot_E1_vs_P1.PNG)
+
+The MA plot and Volcano plot are both essential tools for visualizing differential gene expression results between two conditions—in this case, between E1 and P1.
+
+In the MA plot, each point represents a transcript. The x-axis shows the average expression level (logCounts), while the y-axis shows the log fold change (logFC) between the two conditions. Red points indicate significantly differentially expressed transcripts. Transcripts that are far from the center (logFC ≠ 0) and colored red are of particular interest as they show strong differential expression.
+
+The Volcano plot combines statistical significance and fold change. The x-axis shows the logFC, while the y-axis shows the -log10(FDR), a measure of significance. Red points represent transcripts that are significantly differentially expressed after multiple testing correction. Points in the top left and right corners indicate transcripts with both high significance and large expression changes, making them strong candidates for biological relevance.
+
+Together, these plots help identify which genes are significantly up- or downregulated between conditions, with both visualizing consistency and reliability of the expression differences.
 
 
 ## Extract and cluster differentially expressed transcripts
 
-An initial step in analyzing differential expression is to extract those transcripts that are most differentially 
-expressed (most significant FDR and fold-changes) and to cluster the transcripts according to their 
-patterns of differential expression across the samples.
+An important initial step in differential expression analysis is to **extract transcripts that show the strongest changes**, based on both **low False Discovery Rate (FDR)** and **high absolute log2 fold change**. These transcripts are then typically **clustered according to their expression patterns** across different samples, helping to identify groups of genes with similar regulation dynamics.
 
-> <hands-on-title>Task description</hands-on-title>
+To identify biologically meaningful changes in gene expression, two main criteria are commonly used: the **False Discovery Rate (FDR)** and the **log2 fold change**. 
+
+The **FDR** is a statistical correction that controls for the expected proportion of **false positives** among the significantly differentially expressed genes, ensuring **reliability** even after multiple comparisons. Setting a **FDR threshold** (e.g., < **0.001**) increases confidence in the detected differences.
+
+The **log2 fold change** quantifies the **magnitude** of expression change between two conditions: a value of **±2** indicates a **4-fold change** in expression.
+
+Using both filters allows focusing on genes that are not only **statistically significant** but also show a **strong biological effect**, making them more relevant for downstream analysis.
+
+
+> <hands-on-title>Running Extract and cluster differentially expressed transcripts</hands-on-title>
 >
 > 1. **Extract and cluster differentially expressed transcripts** {% icon tool %} with the following parameters:
 >    - In *"Additional Options"*:
 >        - *"Expression matrix"*: `Build expression matrix on data XX: estimated RNA-Seq fragment isoform counts (raw counts)`
 >        - *"Sample description"*: `Describe samples`
->        - *"Differential expression results"*: `Differential expression results on data XXX
->        - *"p-value cutoff for FDR"*: `1`
->        - *"Run GO enrichment analysis"*: `No`
->
->    > <comment-title></comment-title>
->    >
->    > *"p-value cutoff for FDR"*: `1`
->    > Don't do this at home! It's because we have a Toy Dataset. The cutoff should be around `0.001`
->    {: .comment}
+>        - *"Differential expression results"*: `DESeq2_count_matrices`
+>        - *"p-value cutoff for FDR"*: `0.001`
+>        - *"min abs(log2(a/b)) fold change"*: `2`
 >
 {: .hands_on}
 
-All genes that have P-values at most 1e-3 and are at least 2^2 fold differentially expressed are extracted for each of the earlier pairwise DE comparisons.
-Different kinds of summary files and plots are generated:
-- **Sample correlation matrix heatmap**
-- **DE gene vs. samples heatmap**
+### Differential Expression Dataset Overview
 
-To study more seriously and define your gene clusters, you will need to interact with the data as described below.
-The clusters and all required data for interrogating and defining clusters is all saved with an R-session, 
-locally with the file 'all.RData'.
+First, let's examine the dataset titled `Extract and cluster differentially expressed transcripts on data XX: extracted differentially expressed genes`. 
+It consists of **nine files**, grouped into **three per comparison**:
+- **E1_vs_P0** comparison:
+        - `input.matrix.E1_vs_P0.DESeq2.DE_results.P0.001_C2.0.DE.subset`: This file contains the **complete list of differentially expressed transcripts between the E1 and P0 conditions**, filtered based on an adjusted p-value (FDR) < 0.001 and an absolute log2 fold change > 2.
+        - `input.matrix.E1_vs_P0.DESeq2.DE_results.P0.001_C2.0.E1-UP.subset`: This subset includes transcripts that are **upregulated in the E1 condition** relative to P0.
+        - `input.matrix.E1_vs_P0.DESeq2.DE_results.P0.001_C2.0.P0-UP.subset`: This subset includes transcripts that are **downregulated in the E1 condition** (i.e., upregulated in P0 relative to E1).
+- **E1_vs_P1** comparison:
+        - `input.matrix.E1_vs_P1.DESeq2.DE_results.P0.001_C2.0.DE.subset`: This file contains the **complete list of differentially expressed transcripts between the E1 and P1 conditions**, filtered using an adjusted p-value (FDR) < 0.001 and an absolute log2 fold change > 2.
+        - `input.matrix.E1_vs_P1.DESeq2.DE_results.P0.001_C2.0.E1-UP.subset`: This subset includes transcripts that are **upregulated in the E1 condition** relative to P1.
+        - `input.matrix.E1_vs_P1.DESeq2.DE_results.P0.001_C2.0.P1-UP.subset`: This subset includes transcripts that are **downregulated in the E1 condition** (i.e., upregulated in P1 relative to E1).
 
+- **P0_vs_P1** comparison:
+        - `input.matrix.P0_vs_P1.DESeq2.DE_results.P0.001_C2.0.DE.subset`: This file contains the **complete list of differentially expressed transcripts between the P0 and P1 conditions**, using an adjusted p-value (FDR) < 0.001 and an absolute log2 fold change > 2.
+        - `input.matrix.P0_vs_P1.DESeq2.DE_results.P0.001_C2.0.P0-UP.subset`: This subset includes transcripts that are **upregulated in the P0 condition** relative to P1.
+        - `input.matrix.P0_vs_P1.DESeq2.DE_results.P0.001_C2.0.P1-UP.subset`: This subset includes transcripts that are **upregulated in the P1 condition** (i.e., downregulated in P0 relative to P1).
+
+These matrices will be used in **downstream analyses**, such as **Gene Ontology (GO) enrichment analysis** using **R** for example.
+
+Then, let's look at the dataset titled `Extract and cluster differentially expressed transcripts on data XX: summary files`.
+It consists of **6 files**, including :
+- `results_matrix`: A table containing the expression values (e.g., normalized counts) of the differentially expressed transcripts across all samples.
+- `results_matrix_log2_centered`: A log2-transformed matrix where each gene’s expression values are centered (mean subtracted), highlighting relative expression differences across conditions.
+- `results_matrix_log2_centered_heatmap`:   A heatmap visualization of the centered log2-transformed data, showing the clustering of genes and samples based on expression patterns.
+- `results_matrix_log2`: The same expression matrix as above, but log2-transformed to stabilize variance and make the data more suitable for visualization and statistical analysis.
+- `results_matrix_log2_sample_cor`: represents a **sample-to-sample correlation matrix** based on the **log2-transformed expression values** of the differentially expressed genes. Each row and column corresponds to a sample (e.g., `P1-3`, `P0-2`, `E1-1`, etc.), and each cell contains the **Pearson correlation coefficient** between the two corresponding samples.
+- `results_matrix_log2_sample_cor_matrix`:  A sample correlation heatmap that visually represents the similarity between samples based on their log2 expression profiles.
+
+![DE_heatmap](../../images/full-de-novo/DE_heatmap.PNG)
+
+![DE_heatmap_one_to_one](../../images/full-de-novo/DE_heatmap_one_to_one.PNG)
+
+Finally, the tool outputs `Extract and cluster differentially expressed transcripts on data XX: RData file`:
+This file is an **RData binary object** generated by Galaxy, containing all the processed data used during the **Extract and cluster differentially expressed transcripts** step.
+
+It includes:
+- The expression matrix (raw and log-transformed values),
+- The results of differential expression analysis (e.g., fold changes, FDR),
+- The clustering information (e.g., transcript clusters and heatmap groupings),
+- Sample metadata (e.g., condition labels, replicate identifiers),
+- And any parameters used during the clustering process.
+
+You can load this file directly into R using the `load("filename.RData")` function to explore or re-analyze the data, plot custom heatmaps, or extract specific subsets for downstream analyses (e.g., pathway analysis, custom filtering, or re-clustering).
+
+This file is especially useful for:
+- **Reproducibility**, as it captures the full analysis context;
+- **Advanced users** who want to further process or visualize the results in R outside of Galaxy.
+
+To explore and refine gene expression clusters, the next step involves using the tool **"Partition genes into expression clusters"**. This process requires interacting with the data saved in the R session file `all.RData`, which was generated from the previous step. 
+This file contains all the necessary information—such as expression matrices and clustering results—that can be used to define and visualize gene clusters in more detail.
 
 ## Partition genes into expression clusters
 
@@ -1302,7 +1383,7 @@ There are three different methods for partitioning genes into clusters:
 - Cut the hierarchically clustered genes into exactly K clusters.
 - (Recommended) cut the hierarchically clustered gene tree at X percent height of the tree.
 
-> <hands-on-title>Task description</hands-on-title>
+> <hands-on-title>Running Partition genes into expression clusters</hands-on-title>
 >
 > 1. **Partition genes into expression clusters** {% icon tool %} with the following parameters:
 >    - *"RData file"*: `Extract and cluster differentially expressed transcripts on data XX: RData file`
@@ -1310,9 +1391,20 @@ There are three different methods for partitioning genes into clusters:
 >
 {: .hands_on}
 
+> <comment-title></comment-title>
+To further explore the data, one can perform additional analyses such as building **co-expression and correlation networks** (e.g., using R packages), conducting **functional enrichment analyses** (e.g., GO or KEGG), or even performing **variant calling** to identify sequence variations within expressed genes.
+{: .comment}
+
+## Results intepretation
+*Cyril*
 
 # Conclusion
 
+In this tutorial, we performed a **de novo transcriptome assembly** using RNA-seq reads. 
+The raw sequencing data first underwent **quality control and trimming** to ensure high-quality input for assembly. 
+Once the transcriptome was assembled and filtered, we proceeded with **annotation**, allowing us to assign putative functions and biological roles to the assembled transcripts. 
+We then conducted a **differential expression (DE) analysis** to identify genes whose expression levels significantly change between experimental conditions. 
+Combined with annotation, this analysis gave us key alements **to reveal the early signaling pathways involved in the encystment of Acanthamoeba castellanii**, and **to identify potential gene targets for preventing encystment**.
 
-In this tutorial, we built a *de novo* transcriptome from RNA-seq reads, then we review different quality control metrics. Then we performed a differential expression analysis on the test dataset to answer the following question : what are the genes deregulated in force-fed duck livers compared to control ?
+
 
