@@ -98,7 +98,7 @@ The dataset, published by [Bernard et al. (2022)](https://www.nature.com/article
 > 
 >    {% snippet faqs/galaxy-fr/collections_build_list.md name="R2" datasets_description="all _R2_001.fastq.gz files" %}
 > 
-> 4. **Check that the datatype is `fastq.gz`**
+> 4. **Check that the datatype is `fastq.gz` (or `fastqsanger.gz` which is equivalent)**
 >
 >    {% snippet faqs/galaxy/datasets_change_datatype.md datatype="fastq.gz" %}
 {: .hands_on}
@@ -132,13 +132,17 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
 >   - *"Short read data from your current history"*: `RawData` (collection) {% icon param-collection %}
-> 2. **Rename and tag output collections**
+> 2. **Rename and output collections**
 >    - *"FastQC on collection XX: RawData"* -> `FastQC_raw_data`
 >    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_Webpage`
 > 
 > {% snippet faqs/galaxy/collections_rename.md name="FastQC_raw_data and FastQC_raw_Webpage" %}
 {: .hands_on}
 
+> <comment-title></comment-title>
+>  You can use the tool **Falco** {% icon tool %} as well to do the QC.
+{: .comment}
+> 
 > <question-title></question-title>
 >
 > What can you tell about the overall quality of the dataset ?
@@ -292,8 +296,9 @@ Here, the reference database will be [**Silva**](https://www.arb-silva.de/): hig
 
 > <hands-on-title>Running Bowtie2 on Silva</hands-on-title>
 > 1. **Bowtie2** {% icon tool %} with the following parameters:
->    - *"Is this single or paired library"*: `Paired-end Dataset Collection`
->	 - *"FASTQ Paired Dataset"* : `fastq_raw_paired`  
+>    - *"Is this single or paired library"*: `Paired-end`
+>    - *"FASTA/Q file #1"*: `Fixed_R1`
+>    - *"FASTA/Q file #2"*: `Fixed_R2` 
 >        - *"Write unaligned reads (in fastq format) to separate file(s)"*: `Yes`
 >        - *"Write aligned reads (in fastq format) to separate file(s)"*: `No`
 >        - *"Do you want to set paired-end options?"*: `No`
