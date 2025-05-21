@@ -132,7 +132,7 @@ To get an overview of the sequencing data quality, we will use [**fastqc** (Simo
 >
 > 1. **FastQC** {% icon tool %} with the following parameters:
 >   - *"Short read data from your current history"*: `RawData` (collection) {% icon param-collection %}
-> 2. **Rename and output collections**
+> 2. **Rename output collections**
 >    - *"FastQC on collection XX: RawData"* -> `FastQC_raw_data`
 >    - *"FastQC on collection XX: Webpage"* -> `FastQC_raw_Webpage`
 > 
