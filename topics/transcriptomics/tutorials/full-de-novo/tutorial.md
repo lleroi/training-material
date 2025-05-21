@@ -53,7 +53,7 @@ Examining non-model organisms can provide novel insights into the mechanisms und
 In this tutorial, we will work with a real transcriptomic dataset from the free-living amoeba *Acanthamoeba castellanii*, an ubiquitous unicellular protozoan commonly found in artificial water systems such as plumbing and air conditioning units. This organism feeds on bacteria, viruses, and fungi via phagocytosis and acts as a vector for several pathogens, including *Legionella pneumophila*. Under stress, it enters a resistant cyst form.
 **For convenience and to reduce processing time, each FASTQ file has been downsampled to 1 million sequences**.
 
-The dataset, published by [Rolland et al. (2022)](https://www.nature.com/articles/s41467-022-31832-0), was generated to investigate early signalling pathways involved in the encystment process and to identify potential gene targets for its prevention. It includes 9 RNA-seq samples distributed across 3 experimental conditions:
+The dataset, published by [Bernard et al. (2022)](https://www.nature.com/articles/s41467-022-31832-0), was generated to investigate early signalling pathways involved in the encystment process and to identify potential gene targets for its prevention. It includes 9 RNA-seq samples distributed across 3 experimental conditions:
 - 3 replicates from culture medium at time 0 (**P0**)   
 - 3 replicates from culture medium after 1 hour (**P1**)   
 - 3 replicates from encystment medium after 1 hour (**E1**)   
