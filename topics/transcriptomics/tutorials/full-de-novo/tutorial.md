@@ -359,7 +359,7 @@ To analyze the mapping results, we will once again use MultiQC on Bowtie2 mappin
 > > | P1-2      | 13.2%     |
 > > | P1-3      | 10.6%     |
 > >
-> > Mapping raw RNA-seq reads to the SILVA SSU and LSU databases using Bowtie 2 in --very-sensitive mode reveals that 8–15% of reads align to rRNA, indicating moderate contamination. This is typical for samples without rRNA depletion. The variability between samples may reflect biological or technical differences. These results justify removing rRNA-aligned reads to clean the dataset before transcriptomic analysis.
+> > Mapping raw RNA-seq reads to the SILVA SSU and LSU databases using Bowtie 2 in --very-sensitive mode reveals that 8–15% of reads align to rRNA, indicating moderate contamination. These results justify removing rRNA-aligned reads to clean the dataset before transcriptomic analysis.
 > > 
 > > 2. We should discard all read mapping to rRNA sequences and continue the analysis with **unmapped** reads, `R1_filtered_reads` and `R2_filtered_reads`.
 > {: .solution}
